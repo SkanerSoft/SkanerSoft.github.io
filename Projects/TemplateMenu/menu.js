@@ -7,12 +7,13 @@ var Menu = function (pjs, obj) {
 	var width = game.getWH().w;
 	var height = game.getWH().h;
 	var mouse = pjs.mouseControl.initMouseControl();
+	var r = game.getResolution();
 
 	var gameName = obj.name || false;
 	var author = obj.author || false;
-	var radius = obj.radius || 0;
+	var radius = obj.radius * r / 2 || 0;
 
-	var iHeight = height / 10;
+	var iHeight = r * 20;
 	var iCount  = 0;
 	var iPad = iHeight / 10;
 
@@ -45,7 +46,7 @@ var Menu = function (pjs, obj) {
 				y : this.y + iHeight / 4,
 				text : this.name,
 				color : this.color,
-				size : height / 20,
+				size : 10 * r,
 				align : 'center'
 			});
 		};
@@ -94,7 +95,7 @@ var Menu = function (pjs, obj) {
 			text : gameName,
 			x : width / 2, y : height / 50,
 			color : clr.color,
-			size : height / 12,
+			size : r * 35,
 			align : 'center'
 		});
 
@@ -110,9 +111,9 @@ var Menu = function (pjs, obj) {
 		if (author)
 		brush.drawText({
 			text : author,
-			x : width / 2, y : height - height / 80 - (height / 40),
+			x : width / 2, y : height - height / 80 - (r * 10),
 			color : clr.color,
-			size : height / 40,
+			size : r * 10,
 			align : 'center'
 		});
 
