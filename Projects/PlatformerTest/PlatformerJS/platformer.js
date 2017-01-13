@@ -1,5 +1,194 @@
-var PlatformerJS=function(e){var d=this,f=e.vector.point,h=e.vector.size,g=e.OOP,c=[];d.onCellDestroy=!1;d.autoDraw=!0;d.player={id:-1};this.addAction=function(a){a.speed||(a.speed=f(0,0));a.maxSpeed||(a.maxSpeed=f(0,0));a.mass||(a.mass=0);if(!a.friction||0>=a.friction)a.friction=0;a.gravity||(a.gravity=f(0,0));a.plType=10;a.jumped=!1;a.jump=function(b){a.jumped||(a.jumped=!0,a.speed.y=-b)};c.push(a)};this.addSprite=function(a){a.plType=0;c.push(a)};this.addFloor=function(a){a.plType=1;c.push(a)};
-this.addWall=function(a){a.plType=2;c.push(a)};this.addCell=function(a){a.motionPosition=a.getPositionC();a.jumpSpeed||(a.jumpSpeed=0);a.plType=3;c.push(a)};this.update=function(){g.forArr(c,function(a){10==a.plType?(a.friction&&(0<a.speed.x?(a.speed.x-=a.friction,Math.abs(a.speed.x)<2*a.friction&&(a.speed.x=0)):0>a.speed.x&&(a.speed.x+=a.friction,Math.abs(a.speed.x)<2*a.friction&&(a.speed.x=0)),0<a.speed.y?(a.speed.y-=a.friction,Math.abs(a.speed.y)<2*a.friction&&(a.speed.y=0)):0>a.speed.y&&(a.speed.y+=
-a.friction,Math.abs(a.speed.y)<2*a.friction&&(a.speed.y=0))),a.gravity.y&&(a.speed.y+=a.gravity.y),g.forArr(c,function(b,e){if(a.id!=b.id&&b.plType){if(1==b.plType||10==b.plType)a.isStaticIntersect(b.getStaticBox())&&0<a.speed.y&&a.y+a.h-a.speed.y<b.y?(a.speed.y=0,a.y=-a.h+b.y,a.jumped=!1):a.isStaticIntersect(b.getStaticBox())&&0>a.speed.y&&a.y+a.speed.y>b.y+a.h&&(a.speed.y*=-.1,a.y=b.y+b.h,a.jumped=!0);(2==b.plType||10==b.plType)&&a.y+a.h>b.y&&(a.isStaticIntersect(b.getStaticBox())&&0<a.speed.x&&
-a.x+a.w-a.speed.x<b.x?(a.speed.x=0,a.x=-a.w+b.x):a.isStaticIntersect(b.getStaticBox())&&0>a.speed.x&&a.x-a.speed.x>b.x+b.w&&(a.x-=a.speed.x,a.speed.x=0));if(3==b.plType&&d.player.id==a.id&&a.isStaticIntersect(b.getStaticBox())&&(c.splice(e,1),d.onCellDestroy))d.onCellDestroy(b)}}),a.maxSpeed.x&&a.speed.x>a.maxSpeed.x&&(a.speed.x=a.maxSpeed.x),a.maxSpeed.y&&a.speed.y>a.maxSpeed.y&&(a.speed.y=a.maxSpeed.y),a.speed.x&&(a.x+=a.speed.x),a.speed.y?(a.jumped=!0,a.y+=a.speed.y):a.jumped=!1):3==a.plType&&
-a.motionC(a.motionPosition,h(0,2.5),a.jumpSpeed||3);d.autoDraw&&a.draw()})}};
+var PlatformerJS = function (pjs) {
+	var _PlatformerJS = this;
+	var log    = pjs.system.log;     // log = console.log;
+	var game   = pjs.game;           // Game Manager
+	var point  = pjs.vector.point;   // Constructor for Point
+	var size  = pjs.vector.size;   // Constructor for Point
+	var camera = pjs.camera;         // Camera Manager
+	var brush  = pjs.brush;          // Brush, used for simple drawing
+	var OOP    = pjs.OOP;            // Object's manager
+	var math   = pjs.math;           // More Math-methods
+	var levels = pjs.levels;         // Levels manager
+
+	var objs = [];
+
+
+
+	// TYPES
+	// 0 - sprite
+	// 1 - floor
+	// 2 - wall
+	// 3 - cell
+
+
+	// config
+	_PlatformerJS.onCellDestroy = false;
+	_PlatformerJS.autoDraw = true;
+	_PlatformerJS.player = {
+		id : -1
+	};
+
+	this.getObjects = function () {
+		return objs;
+	};
+
+	this.del = function (obj) {
+		OOP.forArr(objs, function (el, id) {
+			if (el.id == obj.id)
+				objs.splice(id, 1);
+		});
+	};
+
+	this.addAction = function (obj) {
+		if (!obj.speed) obj.speed = point(0, 0);
+		if (!obj.maxSpeed) obj.maxSpeed = point(0, 0);
+		if (!obj.mass) obj.mass = 0;
+		if (!obj.friction || obj.friction <= 0) obj.friction = 0;
+		if (!obj.gravity) obj.gravity = point(0, 0);
+
+		obj.plType = 10;
+		obj.jumped = false;
+		obj.jump = function (s) {
+			if (!obj.jumped) {
+				obj.jumped = true;
+				obj.speed.y = -s;
+			}
+		};
+
+		objs.push(obj);
+	};
+
+	this.addSprite = function (obj) { // type 0
+		obj.plType = 0;
+		objs.push(obj);
+	};
+
+	this.addFloor = function (obj) { // type 1
+		obj.plType = 1;
+		objs.push(obj);
+	};
+
+	this.addWall = function (obj) { // type 2
+		obj.plType = 2;
+		objs.push(obj);
+	};
+
+	this.addCell = function (obj) { // type 2
+		obj.motionPosition = obj.getPositionC();
+		if (!obj.jumpSpeed) obj.jumpSpeed = 0;
+		obj.plType = 3;
+		objs.push(obj);
+	};
+
+	this.update = function () {
+
+		OOP.forArr(objs, function (el) {
+
+			if (el.plType == 10) {
+
+				if (el.friction) {
+
+					if (el.speed.x > 0) {
+						el.speed.x -= el.friction;
+						if (Math.abs(el.speed.x) < el.friction * 2)
+							el.speed.x = 0;
+					} else if (el.speed.x < 0) {
+						el.speed.x += el.friction;
+						if (Math.abs(el.speed.x) < el.friction * 2)
+							el.speed.x = 0;
+					}
+
+					if (el.speed.y > 0) {
+						el.speed.y -= el.friction;
+						if (Math.abs(el.speed.y) < el.friction * 2)
+							el.speed.y = 0;
+					} else if (el.speed.y < 0) {
+						el.speed.y += el.friction;
+						if (Math.abs(el.speed.y) < el.friction * 2)
+							el.speed.y = 0;
+					}
+
+				}
+
+				if (el.gravity.y) {
+					el.speed.y += el.gravity.y;
+				}
+
+				OOP.forArr(objs, function (el2, idEl2) {
+					if (el.id == el2.id) return;
+					if (!el2.plType) return;
+
+					if (el2.plType == 1 || el2.plType == 10) { // floor
+						if (1) {
+							if (el.isStaticIntersect(el2.getStaticBox()) && el.speed.y > 0 && el.y+el.h-el.speed.y < el2.y) {
+								el.speed.y = 0;
+								el.y = -el.h + el2.y;
+								el.jumped = false;
+							} else if (el.isStaticIntersect(el2.getStaticBox()) && el.speed.y < 0 && el.y+el.speed.y > el2.y+el.h) {
+								el.speed.y *= -0.1;
+								el.y = el2.y+el2.h;
+								el.jumped = true;
+							}
+
+						}
+					}
+
+					if (el2.plType == 2 || el2.plType == 10) { // wall
+						if (el.y+el.h > el2.y) {
+							if (el.isStaticIntersect(el2.getStaticBox()) && el.speed.x > 0 && el.x+el.w-el.speed.x < el2.x) {
+								el.speed.x = 0;
+								el.x = -el.w + el2.x;
+							} else if (el.isStaticIntersect(el2.getStaticBox()) && el.speed.x < 0 && el.x-el.speed.x > el2.x+el2.w) {
+								el.x -= el.speed.x;
+								el.speed.x = 0;
+							}
+						}
+					}
+
+					if (el2.plType == 3 && _PlatformerJS.player.id == el.id) { // cell
+						if (el.isStaticIntersect(el2.getStaticBox())) {
+							objs.splice(idEl2, 1);
+							if (_PlatformerJS.onCellDestroy) {
+								_PlatformerJS.onCellDestroy(el2);
+							}
+						}
+					}
+
+				});
+
+				if (el.maxSpeed.x) {
+					if (el.speed.x > el.maxSpeed.x) {
+						el.speed.x = el.maxSpeed.x;
+					}
+				}
+
+				if (el.maxSpeed.y) {
+					if (el.speed.y > el.maxSpeed.y) {
+						el.speed.y = el.maxSpeed.y;
+					}
+				}
+
+				if (el.speed.x) {
+					el.x += el.speed.x;
+				}
+
+				if (el.speed.y) {
+					el.jumped = true;
+					el.y += el.speed.y;
+				} else {
+					el.jumped = false;
+				}
+			} else if (el.plType == 3) { // cell
+				el.motionC(el.motionPosition, size(0, 2.5), el.jumpSpeed || 3);
+			}
+
+			if (_PlatformerJS.autoDraw) {
+				el.draw();
+				// el.drawStaticBox();
+			}
+
+		});
+
+	};
+
+};

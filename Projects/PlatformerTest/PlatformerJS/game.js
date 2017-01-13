@@ -2,10 +2,12 @@ var pjs = new PointJS('2D', 1280 / 2, 720 / 2, { // 16:9
 	backgroundColor : '#1F456D' // if need
 });
 pjs.system.initFullPage(); // for Full Page mode
+// pjs.system.initFullScreen(); // for Full Screen mode (only Desctop)
 
 pjs.system.initFPSCheck();
 
 var platformer = new PlatformerJS(pjs);
+
 
 var log    = pjs.system.log;     // log = console.log;
 var game   = pjs.game;           // Game Manager
@@ -17,6 +19,9 @@ var math   = pjs.math;           // More Math-methods
 var levels = pjs.levels;         // Levels manager
 
 var key   = pjs.keyControl.initKeyControl();
+var mouse = pjs.mouseControl.initMouseControl();
+// var touch = pjs.touchControl.initTouchControl();
+// var act   = pjs.actionControl.initActionControl();
 
 var width  = game.getWH().w; // width of scene viewport
 var height = game.getWH().h; // height of scene viewport
@@ -39,7 +44,7 @@ game.newLoopFromConstructor('myGame', function () {
 		'00000000        00000000000'
 	];
 
-	platformer.onCellDestroy = function () { // При "поедании" кружочка
+	platformer.onCellDestroy = function () {
 		score += 1;
 	};
 
@@ -76,9 +81,11 @@ game.newLoopFromConstructor('myGame', function () {
 		file : pjs._logo
 	});
 	platformer.addAction(rect);
-	rect.friction = 0.1; // сопротивление при движении
-	rect.gravity.y = 0.5; // гравитация
-	platformer.player = rect; // Добавим объект плеера (игрока)
+	rect.friction = 0.1;
+	rect.gravity.y = 0.5;
+	platformer.player = rect;
+
+
 
 
 	this.update = function () {
@@ -108,6 +115,39 @@ game.newLoopFromConstructor('myGame', function () {
 
 		platformer.update();
 		camera.follow(rect);
+
+		var createAction = true;
+		var object = false;
+		OOP.forArr(platformer.getObjects(), function (el) {
+			if (mouse.isInStatic(el.getStaticBox())) {
+				object = el;
+				createAction = false;
+				return 'break';
+			}
+		});
+
+		if (createAction) {
+			brush.drawRect({
+				x : mouse.getPosition().x - 25,
+				y : mouse.getPosition().y - 25,
+				w : 50, h : 50,
+				strokeColor : 'red',
+				strokeWidth : 1
+			});
+
+			if (mouse.isPress('LEFT')) {
+				platformer.addAction(game.newRectObject({
+					positionC : mouse.getPosition(),
+					w : 50, h : 50,
+					fillColor : pjs.colors.randomColor(150, 250)
+				}));
+			}
+
+		} else {
+			if (mouse.isPress('RIGHT')) {
+				platformer.del(object);
+			}
+		}
 
 		brush.drawTextS({
 			text : 'FPS: ' + pjs.system.getFPS(),
