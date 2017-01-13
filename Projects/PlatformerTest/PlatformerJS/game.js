@@ -1,5 +1,5 @@
 var pjs = new PointJS('2D', 1280 / 2, 720 / 2, { // 16:9
-	backgroundColor : '#1F456D' // if need
+	backgroundColor : '#59AAC8' // if need
 });
 pjs.system.initFullPage(); // for Full Page mode
 // pjs.system.initFullScreen(); // for Full Screen mode (only Desctop)
@@ -7,7 +7,6 @@ pjs.system.initFullPage(); // for Full Page mode
 pjs.system.initFPSCheck();
 
 var platformer = new PlatformerJS(pjs);
-
 
 var log    = pjs.system.log;     // log = console.log;
 var game   = pjs.game;           // Game Manager
@@ -44,6 +43,8 @@ game.newLoopFromConstructor('myGame', function () {
 		'00000000        00000000000'
 	];
 
+	var tileSize = 35;
+
 	platformer.onCellDestroy = function () {
 		score += 1;
 	};
@@ -51,20 +52,20 @@ game.newLoopFromConstructor('myGame', function () {
 	OOP.forArr(map, function (string, y) {
 		OOP.forArr(string, function (cell, x) {
 			if (cell == '0')
-				platformer.addAction(game.newRectObject({
-					positionC : point(50 * x, 50 * y),
-					w : 51, h : 51,
-					fillColor : pjs.colors.randomColor(150, 250)
+				platformer.addFloor(game.newImageObject({
+					positionC : point(tileSize * x, tileSize * y),
+					w : tileSize, h : tileSize,
+					file : 'img/ground.png'
 				}));
 			else if (cell == '2')
 				platformer.addWall(game.newRectObject({
-					positionC : point(50 * x, 50 * y),
-					w : 51, h : 51,
-					fillColor : pjs.colors.randomColor(150, 250)
+					positionC : point(tileSize * x, tileSize * y),
+					w : tileSize, h : tileSize,
+					fillColor : '#FFDD00'
 				}));
 			else if (cell == '*')
 				platformer.addCell(game.newCircleObject({
-					positionC : point(50 * x, 50 * y),
+					positionC : point(tileSize * x, tileSize * y),
 					radius : 10,
 					fillColor : pjs.colors.randomColor(150, 250),
 					userData : {
@@ -77,7 +78,7 @@ game.newLoopFromConstructor('myGame', function () {
 
 	var rect = game.newImageObject({
 		positionC : point(150, 10), // central position of text
-		w : 30, h : 30,
+		w : tileSize / 1.5, h : tileSize / 1.5,
 		file : pjs._logo
 	});
 	platformer.addAction(rect);
@@ -99,7 +100,7 @@ game.newLoopFromConstructor('myGame', function () {
 		// else
 		// 	rect.speed.x = 0;
 
-		rect.turn(rect.speed.x*2);
+		rect.turn(rect.speed.x*3);
 
 		if (key.isDown('UP'))
 			rect.jump(11); //rect.speed.y = -2;
@@ -128,33 +129,33 @@ game.newLoopFromConstructor('myGame', function () {
 
 		if (createAction) {
 			brush.drawRect({
-				x : mouse.getPosition().x - 25,
-				y : mouse.getPosition().y - 25,
-				w : 50, h : 50,
+				x : mouse.getPosition().x - tileSize / 2,
+				y : mouse.getPosition().y - tileSize / 2,
+				w : tileSize, h : tileSize,
 				strokeColor : 'green',
 				strokeWidth : 1
 			});
 
 			if (mouse.isPress('LEFT')) {
-				platformer.addAction(game.newRectObject({
+				platformer.addAction(game.newImageObject({
 					positionC : mouse.getPosition(),
-					w : 50, h : 50,
-					fillColor : pjs.colors.randomColor(150, 250)
+					w : tileSize, h : tileSize,
+					file : 'img/brick.png'
 				}));
 			}
 
 		} else {
 			brush.drawText({
-				x : mouse.getPosition().x - 25,
-				y : mouse.getPosition().y - 50,
+				x : mouse.getPosition().x - tileSize / 2,
+				y : mouse.getPosition().y - tileSize / 2,
 				size : 20,
 				color : 'white',
 				text : 'ПКМ - удалить'
 			});
 			brush.drawRect({
-				x : mouse.getPosition().x - 25,
-				y : mouse.getPosition().y - 25,
-				w : 50, h : 50,
+				x : mouse.getPosition().x - tileSize / 2,
+				y : mouse.getPosition().y - tileSize / 2,
+				w : tileSize, h : tileSize,
 				strokeColor : 'red',
 				strokeWidth : 1
 			});
