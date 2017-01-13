@@ -131,7 +131,7 @@ game.newLoopFromConstructor('myGame', function () {
 				x : mouse.getPosition().x - 25,
 				y : mouse.getPosition().y - 25,
 				w : 50, h : 50,
-				strokeColor : 'red',
+				strokeColor : 'green',
 				strokeWidth : 1
 			});
 
@@ -144,6 +144,20 @@ game.newLoopFromConstructor('myGame', function () {
 			}
 
 		} else {
+			brush.drawText({
+				x : mouse.getPosition().x - 25,
+				y : mouse.getPosition().y - 50,
+				size : 20,
+				color : 'white',
+				text : 'ПКМ - удалить'
+			});
+			brush.drawRect({
+				x : mouse.getPosition().x - 25,
+				y : mouse.getPosition().y - 25,
+				w : 50, h : 50,
+				strokeColor : 'red',
+				strokeWidth : 1
+			});
 			if (mouse.isPress('RIGHT')) {
 				platformer.del(object);
 			}
