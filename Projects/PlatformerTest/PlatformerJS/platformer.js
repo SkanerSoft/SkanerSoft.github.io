@@ -180,7 +180,7 @@ var PlatformerJS = function (pjs) {
 								el.speed.y = 0;
 								el.y = -el.h + el2.y;
 								el.jumped = false;
-							} else if (el.isStaticIntersect(el2.getStaticBox()) && el.speed.y < 0 && el.y-el.speed.y > el2.y+el2.h) {
+							} else if (el.isStaticIntersect(el2.getStaticBox()) && el.speed.y < 0 && el.y-el.speed.y > el2.y+el2.h/1.5) {
 								// el.y = el2.y+el2.h;
 								// el.y -= el.speed.y;
 								el.speed.y *= -0.5;
