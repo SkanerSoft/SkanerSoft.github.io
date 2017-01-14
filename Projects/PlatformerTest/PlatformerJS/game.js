@@ -30,46 +30,76 @@ pjs.system.setTitle('PointJS Game'); // Set Title for Tab or Window
 // Game Loop
 game.newLoopFromConstructor('myGame', function () {
 	// Constructor Game Loop
-
 	var score = 0;
 
 	var map = [
-		'',
-		'                              **',
-		'                         ** 00000',
-		'                   **  0000000',
-		'                000000',
-		'    0    0 00000',
-		'00000000        00000000000'
+		'000000000000000000000000',
+		'0 *      *******      10',
+		'0          *** 8*      0',
+		'0  *       11111       0',
+		'0        11            0',
+		'0                      0',
+		'0      111111 ***      0',
+		'0             111 **** 0',
+		'0                 1111 0',
+		'0   ***                0',
+		'000000000000000000000000'
 	];
 
 	var tileSize = 35;
 
-	platformer.onCellDestroy = function () {
+	platformer.onCellDestroy = function (player, cell) {
 		score += 1;
+		platformer.del(cell);
 	};
+
+	platformer.onEnemyCollision = function (player, enemy) {
+		if (player.y+player.h < enemy.y+enemy.h/2) {
+			platformer.del(enemy);
+			player.jumped = false;
+			player.jump(5);
+			score = 100;
+		} else {
+			score = -100;
+		}
+	};
+
+	platformer.setBackImage('img/back.png');
 
 	OOP.forArr(map, function (string, y) {
 		OOP.forArr(string, function (cell, x) {
 			if (cell == '0')
-				platformer.addFloor(game.newImageObject({
+				platformer.addAction(game.newImageObject({
 					positionC : point(tileSize * x, tileSize * y),
 					w : tileSize, h : tileSize,
 					file : 'img/ground.png'
 				}));
-			else if (cell == '2')
-				platformer.addWall(game.newRectObject({
+			else if (cell == '1')
+				platformer.addAction(game.newImageObject({
 					positionC : point(tileSize * x, tileSize * y),
 					w : tileSize, h : tileSize,
-					fillColor : '#FFDD00'
+					file : 'img/brick.png'
 				}));
 			else if (cell == '*')
-				platformer.addCell(game.newCircleObject({
+				platformer.addCell(game.newAnimationObject({
 					positionC : point(tileSize * x, tileSize * y),
-					radius : 10,
-					fillColor : pjs.colors.randomColor(150, 250),
+					animation : pjs.tiles.newAnimation('img/cell.png', 21, 33, 4),
+					w : tileSize / 2, h : tileSize / 2,
+					delay : math.random(50, 200) / 10,
 					userData : {
-						jumpSpeed : math.random(1, 5)
+						jumpSpeed : math.random(2, 10)
+					}
+				}));
+			else if (cell == '8')
+				platformer.addEnemy(game.newAnimationObject({
+					positionC : point(tileSize * x, tileSize * y),
+					animation : pjs.tiles.newAnimation('img/enemy.png', 44, 32, 2),
+					w : 44 / 1.5, h : 32 / 1.5,
+					delay : math.random(50, 200) / 10,
+					userData : {
+						jumpSpeed : math.random(2, 10),
+						gravity : point(0, 2),
+						speed : point(-1, 0)
 					}
 				}));
 
@@ -103,7 +133,7 @@ game.newLoopFromConstructor('myGame', function () {
 		rect.turn(rect.speed.x*3);
 
 		if (key.isDown('UP'))
-			rect.jump(11); //rect.speed.y = -2;
+			rect.jump(10); //rect.speed.y = -2;
 		else if (key.isDown('DOWN'))
 			rect.speed.y += 2;
 		// else

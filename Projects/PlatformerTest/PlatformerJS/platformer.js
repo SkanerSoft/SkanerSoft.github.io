@@ -12,13 +12,16 @@ var PlatformerJS = function (pjs) {
 
 	var objs = [];
 
-
+	var width  = game.getWH().w; // width of scene viewport
+	var height = game.getWH().h; // height of scene viewport
 
 	// TYPES
 	// 0 - sprite
 	// 1 - floor
 	// 2 - wall
 	// 3 - cell
+	// 10 - action
+	// 11 - enemy
 
 
 	// config
@@ -26,6 +29,29 @@ var PlatformerJS = function (pjs) {
 	_PlatformerJS.autoDraw = true;
 	_PlatformerJS.player = {
 		id : -1
+	};
+
+	var backArray = false;
+	var backImage = false;
+	var scrollSpeed = 0;
+
+	this.setBackImage = function (file) {
+		game.newImageObject({
+			file : file,
+			onload : function () {
+					this.resize(size(false, height));
+					var that = this;
+					var count = Math.ceil(width / this.w);
+					backArray = [];
+					OOP.fillArr(backArray, count+1, function () {
+						return game.newImageObject({
+							file : file,
+							w : that.w,
+							h : that.h
+						});
+					});
+			}
+		});
 	};
 
 	this.getObjects = function () {
@@ -58,7 +84,26 @@ var PlatformerJS = function (pjs) {
 		objs.push(obj);
 	};
 
-	this.addSprite = function (obj) { // type 0
+	this.addEnemy = function (obj) {
+		if (!obj.speed) obj.speed = point(0, 0);
+		if (!obj.maxSpeed) obj.maxSpeed = point(0, 0);
+		if (!obj.mass) obj.mass = 0;
+		if (!obj.friction || obj.friction <= 0) obj.friction = 0;
+		if (!obj.gravity) obj.gravity = point(0, 0);
+
+		obj.plType = 11;
+		obj.jumped = false;
+		obj.jump = function (s) {
+			if (!obj.jumped) {
+				obj.jumped = true;
+				obj.speed.y = -s;
+			}
+		};
+
+		objs.push(obj);
+	};
+
+	this.addStatic = function (obj) { // type 0
 		obj.plType = 0;
 		objs.push(obj);
 	};
@@ -82,9 +127,24 @@ var PlatformerJS = function (pjs) {
 
 	this.update = function () {
 
+		if (backArray) {
+			backArray[0].setPositionS(point(0, 0));
+			OOP.forArr(backArray, function (el, i, arr, old) {
+
+				if (i > 0) {
+					el.setPosition(point(old.x + old.w, old.y));
+				}
+
+				if (el.isInCameraStatic()) {
+					el.draw();
+				}
+
+			});
+		}
+
 		OOP.forArr(objs, function (el) {
 
-			if (el.plType == 10) {
+			if (el.plType == 10 || el.plType == 11) {
 
 				if (el.friction) {
 
@@ -125,8 +185,8 @@ var PlatformerJS = function (pjs) {
 								el.y = -el.h + el2.y;
 								el.jumped = false;
 							} else if (el.isStaticIntersect(el2.getStaticBox()) && el.speed.y < 0 && el.y-el.speed.y > el2.y+el2.h) {
+								el.y -= el.speed.y;
 								el.speed.y *= -0.1;
-								el.y = el2.y+el2.h;
 								el.jumped = true;
 							}
 
@@ -136,20 +196,35 @@ var PlatformerJS = function (pjs) {
 					if (el2.plType == 2 || el2.plType == 10) { // wall
 						if (el.y+el.h > el2.y) {
 							if (el.isStaticIntersect(el2.getStaticBox()) && el.speed.x > 0 && el.x+el.w-el.speed.x < el2.x) {
-								el.speed.x = 0;
-								el.x = -el.w + el2.x;
+								el.x -= el.speed.x;
+								if (el.plType != 11)
+									el.speed.x = 0;
+								else
+									el.speed.x = -el.speed.x;
 							} else if (el.isStaticIntersect(el2.getStaticBox()) && el.speed.x < 0 && el.x-el.speed.x > el2.x+el2.w) {
 								el.x -= el.speed.x;
-								el.speed.x = 0;
+								if (el.plType != 11)
+									el.speed.x = 0;
+								else
+									el.speed.x = -el.speed.x;
 							}
 						}
 					}
 
-					if (el2.plType == 3 && _PlatformerJS.player.id == el.id) { // cell
-						if (el.isStaticIntersect(el2.getStaticBox())) {
-							objs.splice(idEl2, 1);
-							if (_PlatformerJS.onCellDestroy) {
-								_PlatformerJS.onCellDestroy(el2);
+					if (_PlatformerJS.player.id != -1) {
+						if (el2.plType == 3 && _PlatformerJS.player.id == el.id) { // cell
+							if (el.isStaticIntersect(el2.getStaticBox())) {
+								if (_PlatformerJS.onCellDestroy) {
+									_PlatformerJS.onCellDestroy(_PlatformerJS.player, el2);
+								}
+							}
+						}
+
+						if (el2.plType == 11 && _PlatformerJS.player.id == el.id) { // enemy
+							if (el.isStaticIntersect(el2.getStaticBox())) {
+								if (_PlatformerJS.onEnemyCollision) {
+									_PlatformerJS.onEnemyCollision(_PlatformerJS.player, el2);
+								}
 							}
 						}
 					}
