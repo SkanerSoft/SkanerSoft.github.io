@@ -108,11 +108,6 @@ var PlatformerJS = function (pjs) {
 		objs.push(obj);
 	};
 
-	this.addFloor = function (obj) { // type 1
-		obj.plType = 1;
-		objs.push(obj);
-	};
-
 	this.addWall = function (obj) { // type 2
 		obj.plType = 2;
 		objs.push(obj);
@@ -174,26 +169,28 @@ var PlatformerJS = function (pjs) {
 					el.speed.y += el.gravity.y;
 				}
 
+				if (el.plType == 10 || el.plType == 11)
 				OOP.forArr(objs, function (el2, idEl2) {
 					if (el.id == el2.id) return;
 					if (!el2.plType) return;
 
-					if (el2.plType == 1 || el2.plType == 10) { // floor
-						if (1) {
-							if (el.isStaticIntersect(el2.getStaticBox()) && el.speed.y > 0 && el.y+el.h-el.speed.y < el2.y) {
+					if (el2.plType == 2) { // wall
+						if (el.x < el2.x+el2.w && el.x+el.w > el2.x) {
+							if (el.isStaticIntersect(el2.getStaticBox()) && el.speed.y > 0 && el.y+el.h-el.speed.y*2 < el2.y) {
 								el.speed.y = 0;
 								el.y = -el.h + el2.y;
 								el.jumped = false;
 							} else if (el.isStaticIntersect(el2.getStaticBox()) && el.speed.y < 0 && el.y-el.speed.y > el2.y+el2.h) {
-								el.y -= el.speed.y;
-								el.speed.y *= -0.1;
+								// el.y = el2.y+el2.h;
+								// el.y -= el.speed.y;
+								el.speed.y *= -0.5;
 								el.jumped = true;
 							}
 
 						}
 					}
 
-					if (el2.plType == 2 || el2.plType == 10) { // wall
+					if (el2.plType == 2) { // wall
 						if (el.y+el.h > el2.y) {
 							if (el.isStaticIntersect(el2.getStaticBox()) && el.speed.x > 0 && el.x+el.w-el.speed.x < el2.x) {
 								el.x -= el.speed.x;
@@ -212,21 +209,23 @@ var PlatformerJS = function (pjs) {
 					}
 
 					if (_PlatformerJS.player.id != -1) {
-						if (el2.plType == 3 && _PlatformerJS.player.id == el.id) { // cell
-							if (el.isStaticIntersect(el2.getStaticBox())) {
+
+						if (el2.plType == 3) { // cell
+							if (_PlatformerJS.player.isStaticIntersect(el2.getStaticBox())) {
 								if (_PlatformerJS.onCellDestroy) {
 									_PlatformerJS.onCellDestroy(_PlatformerJS.player, el2);
 								}
 							}
 						}
 
-						if (el2.plType == 11 && _PlatformerJS.player.id == el.id) { // enemy
-							if (el.isStaticIntersect(el2.getStaticBox())) {
+						if (el2.plType == 11) { // enemy
+							if (_PlatformerJS.player.isStaticIntersect(el2.getStaticBox())) {
 								if (_PlatformerJS.onEnemyCollision) {
 									_PlatformerJS.onEnemyCollision(_PlatformerJS.player, el2);
 								}
 							}
 						}
+
 					}
 
 				});
@@ -258,7 +257,9 @@ var PlatformerJS = function (pjs) {
 			}
 
 			if (_PlatformerJS.autoDraw) {
-				el.draw();
+				if (el.isInCameraStatic()) {
+					el.draw();
+				}
 				// el.drawStaticBox();
 			}
 

@@ -48,6 +48,10 @@ game.newLoopFromConstructor('myGame', function () {
 
 	var tileSize = 35;
 
+	platformer.onActionCollision = function (player, block) {
+
+	};
+
 	platformer.onCellDestroy = function (player, cell) {
 		score += 1;
 		platformer.del(cell);
@@ -69,13 +73,13 @@ game.newLoopFromConstructor('myGame', function () {
 	OOP.forArr(map, function (string, y) {
 		OOP.forArr(string, function (cell, x) {
 			if (cell == '0')
-				platformer.addAction(game.newImageObject({
+				platformer.addWall(game.newImageObject({
 					positionC : point(tileSize * x, tileSize * y),
 					w : tileSize, h : tileSize,
 					file : 'img/ground.png'
 				}));
 			else if (cell == '1')
-				platformer.addAction(game.newImageObject({
+				platformer.addWall(game.newImageObject({
 					positionC : point(tileSize * x, tileSize * y),
 					w : tileSize, h : tileSize,
 					file : 'img/brick.png'
@@ -167,7 +171,7 @@ game.newLoopFromConstructor('myGame', function () {
 			});
 
 			if (mouse.isPress('LEFT')) {
-				platformer.addAction(game.newImageObject({
+				platformer.addWall(game.newImageObject({
 					positionC : mouse.getPosition(),
 					w : tileSize, h : tileSize,
 					file : 'img/brick.png'
