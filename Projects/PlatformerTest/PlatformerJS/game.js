@@ -18,7 +18,7 @@ var math   = pjs.math;           // More Math-methods
 var levels = pjs.levels;         // Levels manager
 
 var key   = pjs.keyControl.initKeyControl();
-var mouse = pjs.mouseControl.initMouseControl();
+// var mouse = pjs.mouseControl.initMouseControl();
 // var touch = pjs.touchControl.initTouchControl();
 // var act   = pjs.actionControl.initActionControl();
 
@@ -32,44 +32,75 @@ game.newLoopFromConstructor('myGame', function () {
 	// Constructor Game Loop
 	var score = 0;
 
-	var map = [
-		'000000000000000000000000',
-		'0 *      *******      10',
-		'0          *** 8*      0',
-		'0  *       11111       0',
-		'0        11            0',
-		'0                      0',
-		'0      111111 ***      0',
-		'0             111 **** 0',
-		'0                 1111 0',
-		'0   ***                0',
-		'000000000000000000000000'
-	];
+	// Для этого игрового цикла установим фон
+	platformer.setBackImage('img/back.png');
 
+	// переменная с размером ячейки (квадратные будут)
 	var tileSize = 35;
 
-	platformer.onActionCollision = function (player, block) {
-
+	//
+	platformer.onOptionCollision = function (player, option) {
+		if (option.desc == 'level ok') {
+			document.location.reload();
+		}
 	};
 
-	platformer.onCellDestroy = function (player, cell) {
+	platformer.onCellCollision = function (player, cell) {
 		score += 1;
 		platformer.del(cell);
 	};
 
 	platformer.onEnemyCollision = function (player, enemy) {
-		if (player.y+player.h < enemy.y+enemy.h/2) {
+		if (player.y+player.h < enemy.y+enemy.h/2 && player.speed.y > 0) {
 			platformer.del(enemy);
 			player.jumped = false;
 			player.jump(5);
-			score = 100;
 		} else {
 			score = -100;
+			document.location.reload();
 		}
 	};
 
-	platformer.setBackImage('img/back.png');
 
+	// Это самопальный "построитель" карты уровня, притивный и простой
+	var map = [
+		'',
+		'0',
+		'0',
+		'0   *****8',
+		'0000000000         00000     00',
+		'000000000000     0000000     00',
+		'0000000000000   00000000     00',
+		'000000000000000000000000     00',
+		' 0000000      *******        00',
+		'  00000         *** 8*       00',
+		'   000  11111   11111        00',
+		'   000        11             000000000000000',
+		'   000                                     00',
+		'   000      111111 ***         00   ***8   000',
+		'   000             111 ****  110000000000000000',
+		'   000                  0000   00          000',
+		'   000   ***           000000    8         00',
+		'   000   00000000000000000000000000000000000',
+		'  00000  000000000     000000',
+		' 0000000   8       000 000000',
+		'0000000000000000000000 000000',
+		'0!                 *0  *00000',
+		'00000000000000000  *0  *00000',
+		'0                 000  *00000',
+		'0 00000000000000000000 000000',
+		'0                      000000',
+		'00000000000000  00 0000000000',
+		'000000000000000 ***0000000000',
+		'0000000000000000***0000000000',
+		'00000000000000000000000000000',
+	];
+
+	// Тут проходим по массиву со строками
+	// и на его основе создаем соответствующие блоки
+	// Чтобы понять, как это работает, посмотрите видеоуроки:
+	// https://www.youtube.com/watch?v=xd04kZZqyQU - создание карты уровня часть 1
+	// https://www.youtube.com/watch?v=YPEYy7SqK_c - создание карты уровня часть 2
 	OOP.forArr(map, function (string, y) {
 		OOP.forArr(string, function (cell, x) {
 			if (cell == '0')
@@ -102,27 +133,37 @@ game.newLoopFromConstructor('myGame', function () {
 					delay : math.random(50, 200) / 10,
 					userData : {
 						jumpSpeed : math.random(2, 10),
-						gravity : point(0, 2),
+						gravity : 2,
 						speed : point(-1, 0)
+					}
+				}));
+			else if (cell == '!')
+				platformer.addOption(game.newImageObject({
+					positionC : point(tileSize * x, tileSize * y),
+					file : pjs._logo,
+					w : tileSize, h : tileSize,
+					userData : {
+						desc : 'level ok'
 					}
 				}));
 
 		});
 	});
 
+	// Создание объекта
 	var rect = game.newImageObject({
-		positionC : point(150, 10), // central position of text
+		positionC : point(150, -100), // central position of text
 		w : tileSize / 1.5, h : tileSize / 1.5,
 		file : pjs._logo
 	});
 	platformer.addAction(rect);
 	rect.friction = 0.1;
-	rect.gravity.y = 0.5;
-	platformer.player = rect;
+	rect.gravity = 0.5;
+	platformer.setPlayer(rect);
 
 
 
-
+	// Основной цикл
 	this.update = function () {
 		// Update function
 		game.clear(); // clear screen
@@ -131,72 +172,25 @@ game.newLoopFromConstructor('myGame', function () {
 			rect.speed.x = -2;
 		else if (key.isDown('RIGHT'))
 			rect.speed.x = 2;
-		// else
-		// 	rect.speed.x = 0;
 
+		// вращаем относительно скорости движения
 		rect.turn(rect.speed.x*3);
 
-		if (key.isDown('UP'))
+		if (key.isPress('UP'))
 			rect.jump(10); //rect.speed.y = -2;
 		else if (key.isDown('DOWN'))
 			rect.speed.y += 2;
-		// else
-		// 	rect.speed.y = 0;
 
 		if (rect.y > 1000) {
 			rect.y = 10;
 			rect.x = 150;
 		}
 
+		// обновление и отрисовка платформера
 		platformer.update();
+
+		// следим за нашим объектом
 		camera.follow(rect);
-
-		var createAction = true;
-		var object = false;
-		OOP.forArr(platformer.getObjects(), function (el) {
-			if (mouse.isInStatic(el.getStaticBox())) {
-				object = el;
-				createAction = false;
-				return 'break';
-			}
-		});
-
-		if (createAction) {
-			brush.drawRect({
-				x : mouse.getPosition().x - tileSize / 2,
-				y : mouse.getPosition().y - tileSize / 2,
-				w : tileSize, h : tileSize,
-				strokeColor : 'green',
-				strokeWidth : 1
-			});
-
-			if (mouse.isPress('LEFT')) {
-				platformer.addWall(game.newImageObject({
-					positionC : mouse.getPosition(),
-					w : tileSize, h : tileSize,
-					file : 'img/brick.png'
-				}));
-			}
-
-		} else {
-			brush.drawText({
-				x : mouse.getPosition().x - tileSize / 2,
-				y : mouse.getPosition().y - tileSize / 2,
-				size : 20,
-				color : 'white',
-				text : 'ПКМ - удалить'
-			});
-			brush.drawRect({
-				x : mouse.getPosition().x - tileSize / 2,
-				y : mouse.getPosition().y - tileSize / 2,
-				w : tileSize, h : tileSize,
-				strokeColor : 'red',
-				strokeWidth : 1
-			});
-			if (mouse.isPress('RIGHT')) {
-				platformer.del(object);
-			}
-		}
 
 		brush.drawTextS({
 			text : 'FPS: ' + pjs.system.getFPS(),

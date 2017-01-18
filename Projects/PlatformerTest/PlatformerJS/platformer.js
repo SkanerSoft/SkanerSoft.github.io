@@ -17,18 +17,25 @@ var PlatformerJS = function (pjs) {
 
 	// TYPES
 	// 0 - sprite
-	// 1 - floor
+	// 1 - option
 	// 2 - wall
 	// 3 - cell
 	// 10 - action
 	// 11 - enemy
 
-
 	// config
-	_PlatformerJS.onCellDestroy = false;
+	_PlatformerJS.onCellCollision = false;
+	_PlatformerJS.onEnemyCollision = false;
+	_PlatformerJS.onOptionCollision = false;
 	_PlatformerJS.autoDraw = true;
-	_PlatformerJS.player = {
+	_PlatformerJS.debug = false;
+
+	var player = {
 		id : -1
+	};
+
+	this.setPlayer = function (obj) {
+		player = obj;
 	};
 
 	var backArray = false;
@@ -70,7 +77,7 @@ var PlatformerJS = function (pjs) {
 		if (!obj.maxSpeed) obj.maxSpeed = point(0, 0);
 		if (!obj.mass) obj.mass = 0;
 		if (!obj.friction || obj.friction <= 0) obj.friction = 0;
-		if (!obj.gravity) obj.gravity = point(0, 0);
+		if (!obj.gravity) obj.gravity = 0;
 
 		obj.plType = 10;
 		obj.jumped = false;
@@ -89,7 +96,7 @@ var PlatformerJS = function (pjs) {
 		if (!obj.maxSpeed) obj.maxSpeed = point(0, 0);
 		if (!obj.mass) obj.mass = 0;
 		if (!obj.friction || obj.friction <= 0) obj.friction = 0;
-		if (!obj.gravity) obj.gravity = point(0, 0);
+		if (!obj.gravity) obj.gravity = 0;
 
 		obj.plType = 11;
 		obj.jumped = false;
@@ -105,6 +112,11 @@ var PlatformerJS = function (pjs) {
 
 	this.addStatic = function (obj) { // type 0
 		obj.plType = 0;
+		objs.push(obj);
+	};
+
+	this.addOption = function (obj) { // type 1
+		obj.plType = 1;
 		objs.push(obj);
 	};
 
@@ -165,63 +177,81 @@ var PlatformerJS = function (pjs) {
 
 				}
 
-				if (el.gravity.y) {
-					el.speed.y += el.gravity.y;
+				if (el.gravity) {
+					el.speed.y += el.gravity;
 				}
 
 				if (el.plType == 10 || el.plType == 11)
 				OOP.forArr(objs, function (el2, idEl2) {
 					if (el.id == el2.id) return;
 					if (!el2.plType) return;
+					var box2 = el2.getStaticBox();
 
 					if (el2.plType == 2) { // wall
-						if (el.x < el2.x+el2.w && el.x+el.w > el2.x) {
-							if (el.isStaticIntersect(el2.getStaticBox()) && el.speed.y > 0 && el.y+el.h-el.speed.y*2 < el2.y) {
-								el.speed.y = 0;
-								el.y = -el.h + el2.y;
-								el.jumped = false;
-							} else if (el.isStaticIntersect(el2.getStaticBox()) && el.speed.y < 0 && el.y-el.speed.y > el2.y+el2.h/1.5) {
-								// el.y = el2.y+el2.h;
-								// el.y -= el.speed.y;
-								el.speed.y *= -0.5;
-								el.jumped = true;
+						var box1 = el.getStaticBox();
+
+						if (el.isStaticIntersect(box2)) {
+
+							if (box1.x < box2.x+box2.w && box1.x+box1.w > box2.x) {
+								if (el.speed.y > 0 && box1.y+box1.h-el.speed.y*2 < box2.y) {
+									el.y = box2.y-box1.h-el.box.y;
+									el.speed.y = 0;
+									el.jumped = false;
+								} else if (el.speed.y < 0 && box1.y-el.speed.y > box2.y+box2.h/1.5) {
+									// el.y = el2.y+el2.h;
+									// el.y -= el.speed.y;
+									el.speed.y *= -0.5;
+									el.jumped = true;
+								}
 							}
+
+
+
+							if (box1.y+box1.h > box2.y && box1.y < box2.y+box2.h) {
+								if (el.speed.x > 0 && box1.x+box1.w-el.speed.x < box2.x) {
+									el.x -= el.speed.x;
+									if (el.plType != 11)
+										el.speed.x = 0;
+									else
+										el.speed.x = -el.speed.x;
+								} else if (el.speed.x < 0 && box1.x-el.speed.x > box2.x+box2.w) {
+									el.x -= el.speed.x;
+									if (el.plType != 11)
+										el.speed.x = 0;
+									else
+										el.speed.x = -el.speed.x;
+								}
+							}
+
+
+
+
 
 						}
 					}
 
-					if (el2.plType == 2) { // wall
-						if (el.y+el.h > el2.y) {
-							if (el.isStaticIntersect(el2.getStaticBox()) && el.speed.x > 0 && el.x+el.w-el.speed.x < el2.x) {
-								el.x -= el.speed.x;
-								if (el.plType != 11)
-									el.speed.x = 0;
-								else
-									el.speed.x = -el.speed.x;
-							} else if (el.isStaticIntersect(el2.getStaticBox()) && el.speed.x < 0 && el.x-el.speed.x > el2.x+el2.w) {
-								el.x -= el.speed.x;
-								if (el.plType != 11)
-									el.speed.x = 0;
-								else
-									el.speed.x = -el.speed.x;
-							}
-						}
-					}
-
-					if (_PlatformerJS.player.id != -1) {
+					if (player.id != -1) {
 
 						if (el2.plType == 3) { // cell
-							if (_PlatformerJS.player.isStaticIntersect(el2.getStaticBox())) {
-								if (_PlatformerJS.onCellDestroy) {
-									_PlatformerJS.onCellDestroy(_PlatformerJS.player, el2);
+							if (player.isStaticIntersect(box2)) {
+								if (_PlatformerJS.onCellCollision) {
+									_PlatformerJS.onCellCollision(player, el2);
 								}
 							}
 						}
 
 						if (el2.plType == 11) { // enemy
-							if (_PlatformerJS.player.isStaticIntersect(el2.getStaticBox())) {
+							if (player.isStaticIntersect(box2)) {
 								if (_PlatformerJS.onEnemyCollision) {
-									_PlatformerJS.onEnemyCollision(_PlatformerJS.player, el2);
+									_PlatformerJS.onEnemyCollision(player, el2);
+								}
+							}
+						}
+
+						if (el2.plType == 1) { // option
+							if (player.isStaticIntersect(box2)) {
+								if (_PlatformerJS.onOptionCollision) {
+									_PlatformerJS.onOptionCollision(player, el2);
 								}
 							}
 						}
@@ -253,14 +283,17 @@ var PlatformerJS = function (pjs) {
 					el.jumped = false;
 				}
 			} else if (el.plType == 3) { // cell
-				el.motionC(el.motionPosition, size(0, 2.5), el.jumpSpeed || 3);
+				if (el.jumpSpeed > 0)
+					el.motionC(el.motionPosition, size(0, 2.5), el.jumpSpeed);
 			}
 
 			if (_PlatformerJS.autoDraw) {
 				if (el.isInCameraStatic()) {
 					el.draw();
+					if (_PlatformerJS.debug) {
+						el.drawStaticBox();
+					}
 				}
-				// el.drawStaticBox();
 			}
 
 		});
