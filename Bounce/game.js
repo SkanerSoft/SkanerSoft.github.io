@@ -6,22 +6,41 @@ game.newLoopFromConstructor('game', function () {
 		source : [
 			'',
 			'',
-			'',
-			'',
-			'  00000 000',
-			'      0 0',
-			'0000000 000000 00000000000',
+			'               0-',
+			'    |         00',
+			'  00000 000  000',
+			'      0 0|               |',
+			'0000000 000000 000000000000000',
 			'      000    000 '
 		]
 	};
 
 	var walls = [];
+	var cells = [];
 
 	OOP.forArr(map.source, function (string, Y) {
 		OOP.forArr(string, function (symbol, X) {
 			if (!symbol || symbol == ' ') return;
 
-			if (symbol == '0') {
+			if (symbol == '|') {
+				cells.push(game.newRectObject({
+					w : map.width/2, h : map.height,
+					x : map.width*X, y : map.height*Y,
+					fillColor : '#FFF953',
+					userData : {
+						active : true
+					}
+				}));
+			} else if (symbol == '-') {
+				cells.push(game.newRectObject({
+					w : map.width, h : map.height/2,
+					x : map.width*X, y : map.height*Y,
+					fillColor : '#FFF953',
+					userData : {
+						active : true
+					}
+				}));
+			} else if (symbol == '0') {
 				walls.push(game.newRectObject({
 					w : map.width, h : map.height,
 					x : map.width*X, y : map.height*Y,
@@ -92,6 +111,16 @@ game.newLoopFromConstructor('game', function () {
 			}
 		});
 
+		OOP.drawArr(cells, function (cell) {
+			if (cell.active) {
+				if (cell.isStaticIntersect(player)) {
+					cell.active = false;
+					cell.fillColor = '#9A9A9A';
+					score++;
+				}
+			}
+		});
+
 		if (player.speed.y) {
 			player.y += player.speed.y;
 		}
@@ -101,6 +130,16 @@ game.newLoopFromConstructor('game', function () {
 		}
 
 
+
+		brush.drawTextS({
+			text : 'Score: '+score,
+			size : 30,
+			color : '#FFFFFF',
+			strokeColor : '#002C5D',
+			strokeWidth : 1,
+			x : 10, y : 10,
+			style : 'bold'
+		});
 		camera.follow(player, 50);
 
 	};
