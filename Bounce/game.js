@@ -1,5 +1,20 @@
 game.newLoopFromConstructor('game', function () {
 
+	// Итак, в этом видео голоса не будет =)
+	// Но вы не отчаивайтесь, вам всё будет понятно и так!
+
+	// Добавим новый тип объекта
+	// ВОДА
+
+	// Но сперва я хочу сделать позиционирование
+	// нашего персонажа непосредственно средствами редактор
+	// карт и уровней
+
+	// P - позиция нашего персонажа (стартовая)
+
+	// Теперь, имея воду мы можем провернуть один хинт
+	// Чтобы добраться до кольца, придется перейти по верху
+
 	var map = {
 		width : 50,
 		height : 50,
@@ -7,22 +22,44 @@ game.newLoopFromConstructor('game', function () {
 			'',
 			'',
 			'               0-',
-			'    |         00',
-			'  00000 000  000',
-			'      0 0|               |',
-			'0000000 000000 000000000000000',
-			'      000    000 '
+			'    |     P  0000', // думаю, ясно
+			'  00000 000 00000',
+			'      0 0|     |0        |',
+			'0000000 000000W00 000000000000',
+			'      000    0W00 0 ',
+			'             0W0  0 ',
+			'             0W | 0 ',
+			'             000000 ',
 		]
 	};
 
+	// Играясь с водой, можно достигать самых разных результатов
+	// У меня же всё, всем спасибо и всем пока =)
+
+	// Теперь расширим пространство и добавим воды (буква W)
+
+	// стартовая позиция (переменная)
+	var plStartPosition = false;
+
 	var walls = [];
 	var cells = [];
+	var waters = []; // тут будет вода
 
 	OOP.forArr(map.source, function (string, Y) {
 		OOP.forArr(string, function (symbol, X) {
 			if (!symbol || symbol == ' ') return;
 
-			if (symbol == '|') {
+			if (symbol == 'P') {
+				// Займемся игроком
+				plStartPosition = point(map.width*X, map.height*Y);
+			} else if (symbol == 'W') {
+				waters.push(game.newRectObject({ // о котором я забыл
+					w : map.width, h : map.height,
+					x : map.width*X, y : map.height*Y,
+					fillColor : '#084379',
+					alpha : 0.5
+				}));
+			} else if (symbol == '|') {
 				cells.push(game.newRectObject({
 					w : map.width/2, h : map.height,
 					x : map.width*X, y : map.height*Y,
@@ -51,9 +88,14 @@ game.newLoopFromConstructor('game', function () {
 		});
 	});
 
+	// При создании игрока мы смотрим
+	// была ли задана позиция, и, если была
+	// используем её, иначе устанавливаем в начало координат
+
 	var player = game.newCircleObject({
 		radius : 20,
-		fillColor : '#FF9191'
+		fillColor : '#FF9191',
+		position : plStartPosition ? plStartPosition : point(0, 0)
 	});
 	player.gr = 0.5;
 	player.speed = point(0, 0);
@@ -118,6 +160,31 @@ game.newLoopFromConstructor('game', function () {
 					cell.fillColor = '#9A9A9A';
 					score++;
 				}
+			}
+		});
+
+		// зададим еще переменную флаг, определяющую находится ли
+		// объект в воде
+
+		var onWater = false;
+
+		// Рисуем и обрабатываем воду
+		OOP.drawArr(waters, function (water) {
+			// Если наш игрок уже находится в воде, ничего не делаем
+			if (onWater) return;
+			// Тут нам надо определить стролкновение
+			// и направить скорость вверх (выталкивание)
+			// Надо хорошенько все продумать
+
+			// Нам требуется учесть, что выталкивающая сила начинает
+			// работать только тогда, когда шар опустится в воду
+			// примерно на половину от его высоты
+			if (water.isStaticIntersect(player) && player.y+player.h/2 > water.y) {
+				player.speed.y -= 0.9; // определим оптимальную скорость
+				onWater = true;
+
+				// теперь надо правильно построить алгоритм
+
 			}
 		});
 
