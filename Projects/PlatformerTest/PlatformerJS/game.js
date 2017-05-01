@@ -7,6 +7,10 @@ pjs.system.initFullPage(); // for Full Page mode
 pjs.system.initFPSCheck();
 
 var platformer = new PlatformerJS(pjs);
+platformer.optMode = true;
+platformer.useDeltaTime = true;
+
+var joystick = new JoyStick(pjs);
 
 var log    = pjs.system.log;     // log = console.log;
 var game   = pjs.game;           // Game Manager
@@ -19,7 +23,7 @@ var levels = pjs.levels;         // Levels manager
 
 var key   = pjs.keyControl.initKeyControl();
 // var mouse = pjs.mouseControl.initMouseControl();
-// var touch = pjs.touchControl.initTouchControl();
+var touch = pjs.touchControl.initTouchControl();
 // var act   = pjs.actionControl.initActionControl();
 
 var width  = game.getWH().w; // width of scene viewport
@@ -30,6 +34,10 @@ pjs.system.setTitle('PointJS Game'); // Set Title for Tab or Window
 // Game Loop
 game.newLoopFromConstructor('myGame', function () {
 	// Constructor Game Loop
+
+	// Настройки джойстика
+	if (touch.isTouchSupported()) joystick.show();
+	// Игровой счет
 	var score = 0;
 
 	// Для этого игрового цикла установим фон
@@ -64,17 +72,16 @@ game.newLoopFromConstructor('myGame', function () {
 
 	// Это самопальный "построитель" карты уровня, притивный и простой
 	var map = [
-		'',
 		'0',
-		'0',
-		'0   *****8',
+		'0        ',
+		'0   ****0*8',
 		'0000000000         00000     00',
 		'000000000000     0000000     00',
 		'0000000000000   00000000     00',
 		'000000000000000000000000     00',
 		' 0000000      *******        00',
-		'  00000         *** 8*       00',
-		'   000  11111   11111        00',
+		'  00000         *** 8*  111  00',
+		'   000  11111   11111 111    00',
 		'   000        11             000000000000000',
 		'   000                                     00',
 		'   000      111111 ***         00   ***8   000',
@@ -93,7 +100,7 @@ game.newLoopFromConstructor('myGame', function () {
 		'00000000000000  00 0000000000',
 		'000000000000000 ***0000000000',
 		'0000000000000000***0000000000',
-		'00000000000000000000000000000',
+		'00000000000000000000000000000'
 	];
 
 	// Тут проходим по массиву со строками
@@ -159,6 +166,7 @@ game.newLoopFromConstructor('myGame', function () {
 	platformer.addAction(rect);
 	rect.friction = 0.1;
 	rect.gravity = 0.5;
+	rect.maxSpeed = point(3, 10);
 	platformer.setPlayer(rect);
 
 
@@ -168,23 +176,19 @@ game.newLoopFromConstructor('myGame', function () {
 		// Update function
 		game.clear(); // clear screen
 
-		if (key.isDown('LEFT'))
-			rect.speed.x = -2;
-		else if (key.isDown('RIGHT'))
-			rect.speed.x = 2;
+		if (key.isDown('LEFT') || joystick.isDown('btnLeft'))
+			rect.speed.x -= 0.6;
+		else if (key.isDown('RIGHT') || joystick.isDown('btnRight'))
+			rect.speed.x += 0.6;
 
 		// вращаем относительно скорости движения
-		rect.turn(rect.speed.x*3);
+		rect.turn(rect.speed.x*3*platformer.getDT());
 
-		if (key.isPress('UP'))
+		// Прыгаем
+		if (key.isPress('UP') || touch.isPress())
 			rect.jump(10); //rect.speed.y = -2;
 		else if (key.isDown('DOWN'))
 			rect.speed.y += 2;
-
-		if (rect.y > 1000) {
-			rect.y = 10;
-			rect.x = 150;
-		}
 
 		// обновление и отрисовка платформера
 		platformer.update();

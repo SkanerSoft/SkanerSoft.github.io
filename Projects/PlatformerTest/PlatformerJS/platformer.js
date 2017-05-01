@@ -15,20 +15,25 @@ var PlatformerJS = function (pjs) {
 	var width  = game.getWH().w; // width of scene viewport
 	var height = game.getWH().h; // height of scene viewport
 
-	// TYPES
-	// 0 - sprite
-	// 1 - option
-	// 2 - wall
-	// 3 - cell
-	// 10 - action
-	// 11 - enemy
+	var TYPES = {
+		0 : 'Sprite',
+		1 : 'Option',
+		2 : 'Wall',
+		3 : 'Cell',
+		10 : 'Action',
+		11 : 'Enemy'
+	};
 
 	// config
 	_PlatformerJS.onCellCollision = false;
+	_PlatformerJS.onWallCollision = false;
 	_PlatformerJS.onEnemyCollision = false;
 	_PlatformerJS.onOptionCollision = false;
+	_PlatformerJS.onUpdate = false;
 	_PlatformerJS.autoDraw = true;
 	_PlatformerJS.debug = false;
+	_PlatformerJS.optMode = false;
+	_PlatformerJS.useDeltaTime = false;
 
 	var player = {
 		id : -1
@@ -67,8 +72,9 @@ var PlatformerJS = function (pjs) {
 
 	this.del = function (obj) {
 		OOP.forArr(objs, function (el, id) {
-			if (el.id == obj.id)
+			if (el.id == obj.id) {
 				objs.splice(id, 1);
+			}
 		});
 	};
 
@@ -132,7 +138,17 @@ var PlatformerJS = function (pjs) {
 		objs.push(obj);
 	};
 
+	this.getDT = function () {
+		return DT;
+	};
+
+	var DT = 1;
 	this.update = function () {
+
+		if (_PlatformerJS.useDeltaTime) {
+			DT = game.getDT(25);
+			DT = DT > 1.5 ? 1 : DT;
+		}
 
 		if (backArray) {
 			backArray[0].setPositionS(point(0, 0));
@@ -150,27 +166,32 @@ var PlatformerJS = function (pjs) {
 		}
 
 		OOP.forArr(objs, function (el) {
+			if (_PlatformerJS.optMode) {
+				if (!el.isInCameraStatic()) {
+					return;
+				}
+			}
 
 			if (el.plType == 10 || el.plType == 11) {
 
 				if (el.friction) {
 
 					if (el.speed.x > 0) {
-						el.speed.x -= el.friction;
+						el.speed.x -= el.friction * DT;
 						if (Math.abs(el.speed.x) < el.friction * 2)
 							el.speed.x = 0;
 					} else if (el.speed.x < 0) {
-						el.speed.x += el.friction;
+						el.speed.x += el.friction * DT;
 						if (Math.abs(el.speed.x) < el.friction * 2)
 							el.speed.x = 0;
 					}
 
 					if (el.speed.y > 0) {
-						el.speed.y -= el.friction;
+						el.speed.y -= el.friction * DT;
 						if (Math.abs(el.speed.y) < el.friction * 2)
 							el.speed.y = 0;
 					} else if (el.speed.y < 0) {
-						el.speed.y += el.friction;
+						el.speed.y += el.friction * DT;
 						if (Math.abs(el.speed.y) < el.friction * 2)
 							el.speed.y = 0;
 					}
@@ -178,7 +199,7 @@ var PlatformerJS = function (pjs) {
 				}
 
 				if (el.gravity) {
-					el.speed.y += el.gravity;
+					el.speed.y += el.gravity * DT;
 				}
 
 				if (el.plType == 10 || el.plType == 11)
@@ -192,45 +213,37 @@ var PlatformerJS = function (pjs) {
 
 						if (el.isStaticIntersect(box2)) {
 
-							if (box1.x < box2.x+box2.w && box1.x+box1.w > box2.x) {
-								if (el.speed.y > 0 && box1.y+box1.h-el.speed.y*2 < box2.y) {
-									el.y = box2.y-box1.h-el.box.y;
+							if (box1.x+box1.w > box2.x+box1.w/4 && box1.x < box2.x+box2.w-box1.w/4) {
+								if (el.speed.y > 0 && box1.y+box1.h < box2.y+box1.h/2) {
+									el.y = -box1.h-el.box.y+box2.y;
 									el.speed.y = 0;
 									el.jumped = false;
-								} else if (el.speed.y < 0 && box1.y-el.speed.y > box2.y+box2.h/1.5) {
-									// el.y = el2.y+el2.h;
-									// el.y -= el.speed.y;
+								} else if (el.speed.y < 0 && box1.y > box2.y+box2.h-box1.h/2) {
 									el.speed.y *= -0.5;
 									el.jumped = true;
 								}
 							}
 
-
-
-							if (box1.y+box1.h > box2.y && box1.y < box2.y+box2.h) {
-								if (el.speed.x > 0 && box1.x+box1.w-el.speed.x < box2.x) {
-									el.x -= el.speed.x;
-									if (el.plType != 11)
-										el.speed.x = 0;
-									else
-										el.speed.x = -el.speed.x;
-								} else if (el.speed.x < 0 && box1.x-el.speed.x > box2.x+box2.w) {
-									el.x -= el.speed.x;
-									if (el.plType != 11)
-										el.speed.x = 0;
-									else
-										el.speed.x = -el.speed.x;
+							if (box1.y+box1.h > box2.y+box1.h/4 && box1.y < box2.y+box2.h-box1.h/4) {
+								if (el.speed.x > 0 && box1.x+box1.w < box2.x+box1.w/2) {
+									el.x = box2.x-box1.w-el.box.x+1;
+									if (el.plType != 11) el.speed.x = 0;
+									else el.speed.x = -el.speed.x;
+								} else if (el.speed.x < 0 && box1.x > box2.x+box2.w-box1.w/2) {
+									el.x = box2.w+box2.x-el.box.x-1;
+									if (el.plType != 11) el.speed.x = 0;
+									else el.speed.x = -el.speed.x;
 								}
 							}
 
+						}
 
-
-
-
+						if (_PlatformerJS.onWallCollision && player.id != -1) {
+							_PlatformerJS.onWallCollision(player, el2);
 						}
 					}
 
-					if (player.id != -1) {
+					if (player.id != -1 && el2.isInCameraStatic()) {
 
 						if (el2.plType == 3) { // cell
 							if (player.isStaticIntersect(box2)) {
@@ -261,35 +274,40 @@ var PlatformerJS = function (pjs) {
 				});
 
 				if (el.maxSpeed.x) {
-					if (el.speed.x > el.maxSpeed.x) {
-						el.speed.x = el.maxSpeed.x;
+					if (Math.abs(el.speed.x) >= Math.abs(el.maxSpeed.x)) {
+						el.speed.x = el.maxSpeed.x*pjs.math.sign(el.speed.x);
 					}
 				}
 
 				if (el.maxSpeed.y) {
-					if (el.speed.y > el.maxSpeed.y) {
-						el.speed.y = el.maxSpeed.y;
+					if (Math.abs(el.speed.y) >= Math.abs(el.maxSpeed.y)) {
+						el.speed.y = el.maxSpeed.y*pjs.math.sign(el.speed.y);
 					}
 				}
 
 				if (el.speed.x) {
-					el.x += el.speed.x;
+					el.x += el.speed.x * DT;
 				}
 
 				if (el.speed.y) {
 					el.jumped = true;
-					el.y += el.speed.y;
+					el.y += el.speed.y * DT;
 				} else {
 					el.jumped = false;
 				}
 			} else if (el.plType == 3) { // cell
 				if (el.jumpSpeed > 0)
-					el.motionC(el.motionPosition, size(0, 2.5), el.jumpSpeed);
+					el.motionC(el.motionPosition, size(0, 2.5), el.jumpSpeed * DT);
 			}
 
 			if (_PlatformerJS.autoDraw) {
 				if (el.isInCameraStatic()) {
 					el.draw();
+
+					if (_PlatformerJS.onUpdate) {
+						_PlatformerJS.onUpdate(el);
+					}
+
 					if (_PlatformerJS.debug) {
 						el.drawStaticBox();
 					}
