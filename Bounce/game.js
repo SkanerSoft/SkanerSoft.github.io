@@ -7,9 +7,9 @@ game.newLoopFromConstructor('game', function () {
 			'',
 			'',
 			'              E0-',
-			'    |        0000                  P',
+			'    |        0000                   ',
 			'  00000 000 00000          *   /000000\\',
-			'      0 0|     |0        |    /00    00\\',
+			' P    0 0|     |0        |    /00    00\\',
 			'0000000E000000W00 00000000000000      00000000',
 			'      000    0W00 0 ',
 			'             0W0  0 ',
@@ -124,7 +124,7 @@ game.newLoopFromConstructor('game', function () {
 		player.speed = point(0, 0);
 
 		if (plStartPosition) {
-			player.setPosition(plStartPosition);
+			player.setPositionC(plStartPosition);
 		}
 
 	};
