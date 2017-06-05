@@ -1,5 +1,6 @@
 var pjs = new PointJS('2D', 400, 400, {
-	backgroundColor : '#C9D6FF'
+	background : 'url(img/back.jpg) no-repeat center',
+	backgroundSize : 'cover'
 });
 pjs.system.initFullPage();
 

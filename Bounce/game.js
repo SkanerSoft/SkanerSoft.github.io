@@ -1,31 +1,16 @@
 game.newLoopFromConstructor('game', function () {
 
-	// Итак, в этом видео голоса не будет =)
-	// Но вы не отчаивайтесь, вам всё будет понятно и так!
-
-	// Добавим новый тип объекта
-	// ВОДА
-
-	// Но сперва я хочу сделать позиционирование
-	// нашего персонажа непосредственно средствами редактор
-	// карт и уровней
-
-	// P - позиция нашего персонажа (стартовая)
-
-	// Теперь, имея воду мы можем провернуть один хинт
-	// Чтобы добраться до кольца, придется перейти по верху
-
 	var map = {
 		width : 50,
 		height : 50,
 		source : [
 			'',
 			'',
-			'               0-',
-			'    |     P  0000', // думаю, ясно
-			'  00000 000 00000',
-			'      0 0|     |0        |',
-			'0000000 000000W00 000000000000',
+			'              E0-',
+			'    |        0000                  P',
+			'  00000 000 00000          *   /000000\\',
+			'      0 0|     |0        |    /00    00\\',
+			'0000000E000000W00 00000000000000      00000000',
 			'      000    0W00 0 ',
 			'             0W0  0 ',
 			'             0W | 0 ',
@@ -33,72 +18,116 @@ game.newLoopFromConstructor('game', function () {
 		]
 	};
 
-	// Играясь с водой, можно достигать самых разных результатов
-	// У меня же всё, всем спасибо и всем пока =)
-
-	// Теперь расширим пространство и добавим воды (буква W)
-
-	// стартовая позиция (переменная)
 	var plStartPosition = false;
 
 	var walls = [];
 	var cells = [];
-	var waters = []; // тут будет вода
+	var waters = [];
+	var enemies = [];
 
-	OOP.forArr(map.source, function (string, Y) {
-		OOP.forArr(string, function (symbol, X) {
-			if (!symbol || symbol == ' ') return;
+	var player = game.newImageObject({
+		w : 40, h : 40,
+		file : 'img/ball.png',
+		position : point(0, 0)
+	});
 
-			if (symbol == 'P') {
-				// Займемся игроком
-				plStartPosition = point(map.width*X, map.height*Y);
-			} else if (symbol == 'W') {
-				waters.push(game.newRectObject({ // о котором я забыл
-					w : map.width, h : map.height,
-					x : map.width*X, y : map.height*Y,
-					fillColor : '#084379',
-					alpha : 0.5
-				}));
-			} else if (symbol == '|') {
-				cells.push(game.newRectObject({
-					w : map.width/2, h : map.height,
-					x : map.width*X, y : map.height*Y,
-					fillColor : '#FFF953',
-					userData : {
-						active : true
-					}
-				}));
-			} else if (symbol == '-') {
-				cells.push(game.newRectObject({
-					w : map.width, h : map.height/2,
-					x : map.width*X, y : map.height*Y,
-					fillColor : '#FFF953',
-					userData : {
-						active : true
-					}
-				}));
-			} else if (symbol == '0') {
-				walls.push(game.newRectObject({
-					w : map.width, h : map.height,
-					x : map.width*X, y : map.height*Y,
-					fillColor : '#B64141'
-				}));
-			}
+	this.entry = function () {
 
+		score = 0;
+		OOP.clearArr(walls);
+		OOP.clearArr(cells);
+		OOP.clearArr(waters);
+		OOP.clearArr(enemies);
+
+		OOP.forArr(map.source, function (string, Y) {
+			OOP.forArr(string, function (symbol, X) {
+				if (!symbol || symbol == ' ') return;
+
+				if (symbol == 'P') {
+					plStartPosition = point(map.width*X, map.height*Y);
+				} else if (symbol == 'W') {
+					waters.push(game.newRectObject({
+						w : map.width, h : map.height,
+						x : map.width*X, y : map.height*Y,
+						fillColor : '#084379',
+						alpha : 0.5
+					}));
+				} else if (symbol == '|') {
+					cells.push(game.newImageObject({
+						w : map.width/4, h : map.height,
+						x : map.width*X + map.width/4, y : map.height*Y,
+						file : 'img/cell.png',
+						userData : {
+							active : true
+						}
+					}));
+				} else if (symbol == '-') {
+					cells.push(game.newImageObject({
+						w : map.width/4, h : map.height,
+						x : map.width*X+ map.width/3, y : map.height*Y,
+						file : 'img/cell.png',
+						angle : 90,
+						userData : {
+							active : true
+						}
+					}));
+				} else if (symbol == '0') {
+					walls.push(game.newImageObject({
+						w : map.width, h : map.height,
+						x : map.width*X, y : map.height*Y,
+						file : 'img/block.jpg'
+					}));
+				} else if (symbol == 'E') {
+					enemies.push(game.newImageObject({
+						w : map.width/4, h : map.height / 2,
+						x : map.width*X + map.width/3, y : map.height*Y + map.height / 2,
+						file : 'img/enemy1.png'
+					}));
+				} else if (symbol == '/') {
+					walls.push(game.newImageObject({
+						w : map.width, h : map.height,
+						x : map.width*X, y : map.height*Y,
+						file : 'img/blockAngle.png',
+						userData : {
+							speedY : -1
+						}
+					}));
+				} else if (symbol == '\\') {
+					walls.push(game.newImageObject({
+						w : map.width, h : map.height,
+						x : map.width*X, y : map.height*Y,
+						file : 'img/blockAngle.png',
+						userData : {
+							speedY : 1
+						}
+					}));
+				} else if (symbol == '*') {
+					enemies.push(game.newImageObject({
+						w : map.width, h : map.height,
+						x : map.width*X, y : map.height*Y,
+						file : 'img/enemy2.png',
+						userData : {
+							mp : point(map.width*X, map.height*Y)
+						}
+					}));
+				}
+
+
+
+
+
+
+			});
 		});
-	});
 
-	// При создании игрока мы смотрим
-	// была ли задана позиция, и, если была
-	// используем её, иначе устанавливаем в начало координат
+		player.gr = 0.5;
+		player.speed = point(0, 0);
 
-	var player = game.newCircleObject({
-		radius : 20,
-		fillColor : '#FF9191',
-		position : plStartPosition ? plStartPosition : point(0, 0)
-	});
-	player.gr = 0.5;
-	player.speed = point(0, 0);
+		if (plStartPosition) {
+			player.setPosition(plStartPosition);
+		}
+
+	};
 
 	this.update = function () {
 		game.clear();
@@ -110,14 +139,25 @@ game.newLoopFromConstructor('game', function () {
 			player.speed.x = 2;
 		else if (key.isDown('LEFT'))
 			player.speed.x = -2;
-		else
-			player.speed.x = 0;
-
+		else if (player.speed.y > 0)
+			player.speed.x = math.toZiro(player.speed.x, 0.1);
 
 		OOP.drawArr(walls, function (wall) {
 			if (wall.isInCameraStatic()) {
-				// wall.drawStaticBox();
+
+				if (wall.speedY > 0)
+					wall.setFlip(point(1, 0));
+
 				if (wall.isStaticIntersect(player)) {
+
+					if (wall.speedY) {
+						player.speed.x = math.toZiro(player.speed.x, 0.1);
+
+						if (player.getDistanceC(wall.getPositionC()) < 40)
+							player.speed.y = wall.speedY * player.speed.x;
+
+						return;
+					}
 
 					if (player.x+player.w > wall.x+wall.w/4 && player.x < wall.x+wall.w-wall.w/4) {
 						if (player.speed.y > 0 && player.y+player.h < wall.y+wall.h/2) {
@@ -126,7 +166,7 @@ game.newLoopFromConstructor('game', function () {
 							else {
 								player.y = wall.y - player.h;
 								player.speed.y *= -0.3;
-								if (player.speed.y > -0.3)
+								if (Math.abs(player.speed.y) < 1)
 									player.speed.y = 0;
 							}
 						} else if (player.speed.y < 0 && player.y > wall.y+wall.h/2) {
@@ -148,7 +188,6 @@ game.newLoopFromConstructor('game', function () {
 						}
 					}
 
-
 				}
 			}
 		});
@@ -157,34 +196,29 @@ game.newLoopFromConstructor('game', function () {
 			if (cell.active) {
 				if (cell.isStaticIntersect(player)) {
 					cell.active = false;
-					cell.fillColor = '#9A9A9A';
+					cell.setImage('img/cell2.png');
 					score++;
 				}
 			}
 		});
 
-		// зададим еще переменную флаг, определяющую находится ли
-		// объект в воде
+		OOP.drawArr(enemies, function (enemy) {
+
+			if (enemy.mp) {
+				enemy.motion(enemy.mp, pjs.vector.size(map.width * 2.5, 0), 2);
+			}
+
+			if (enemy.isStaticIntersect(player)) {
+				game.setLoop('game');
+			}
+		});
 
 		var onWater = false;
-
-		// Рисуем и обрабатываем воду
 		OOP.drawArr(waters, function (water) {
-			// Если наш игрок уже находится в воде, ничего не делаем
 			if (onWater) return;
-			// Тут нам надо определить стролкновение
-			// и направить скорость вверх (выталкивание)
-			// Надо хорошенько все продумать
-
-			// Нам требуется учесть, что выталкивающая сила начинает
-			// работать только тогда, когда шар опустится в воду
-			// примерно на половину от его высоты
 			if (water.isStaticIntersect(player) && player.y+player.h/2 > water.y) {
-				player.speed.y -= 0.9; // определим оптимальную скорость
+				player.speed.y -= 0.9;
 				onWater = true;
-
-				// теперь надо правильно построить алгоритм
-
 			}
 		});
 
@@ -193,9 +227,9 @@ game.newLoopFromConstructor('game', function () {
 		}
 
 		if (player.speed.x) {
+			player.turn(player.speed.x * 2);
 			player.x += player.speed.x;
 		}
-
 
 
 		brush.drawTextS({
