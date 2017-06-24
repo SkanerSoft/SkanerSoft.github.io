@@ -873,15 +873,41 @@ function PointJS(D, w, h, s, NodeJS) { // GL2D/2D/3D, width, height, styleObject
 		dom.attach(element);
 	};
 
-	this.system.newDOM = function (tag) {
-		var element = device.document.createElement(tag);
-		element.style.position = 'fixed';
-		element.style.left = 0;
-		element.style.top = 0;
-		element.style.zIndex = canvas.style.zIndex + 1;
-		element.style.border = 'none';
-		dom.attach(element);
-		return element;
+	this.system.newDOM = function (tag, stopEvents) {
+		var el = device.document.createElement(tag);
+		el.style.position = 'fixed';
+		el.style.left = 0;
+		el.style.top = 0;
+		el.style.zIndex = canvas.style.zIndex + 1;
+		el.style.border = 'none';
+
+		if (stopEvents) {
+
+			var stop = function (e) {
+				e.stopPropagation();
+			};
+
+			el.addEventListener('touchstart',  stop, false);
+			el.addEventListener('touchend',    stop, false);
+			el.addEventListener('touchmove',   stop, false);
+			el.addEventListener('mousedown',   stop, false);
+			el.addEventListener('mousepress',  stop, false);
+			el.addEventListener('mouseup',     stop, false);
+			el.addEventListener('mousemove',   stop, false);
+			el.addEventListener('keypress',    stop, false);
+			el.addEventListener('keydown',     stop, false);
+			el.addEventListener('keyup',       stop, false);
+			el.addEventListener('click',       stop, false);
+			el.addEventListener('wheel',       stop, false);
+			el.addEventListener('mousewheel',  stop, false);
+			el.addEventListener('contextmenu', stop, false);
+			el.addEventListener('selectstart', stop, false);
+			el.addEventListener('dragstart', stop, false);
+			el.addEventListener('DOMMouseScroll', stop, false);
+		}
+
+		dom.attach(el);
+		return el;
 	};
 
 

@@ -1,22 +1,6 @@
 game.newLoopFromConstructor('game', function () {
 
-	var map = {
-		width : 50,
-		height : 50,
-		source : [
-			'',
-			'',
-			'              E0-',
-			'    |        0000                   ',
-			'  00000 000 00000          *   /000000\\',
-			' P    0 0|     |0        |    /00    00\\',
-			'0000000E000000W00 00000000000000      00000000',
-			'      000    0W00 0 ',
-			'             0W0  0 ',
-			'             0W | 0 ',
-			'             000000 ',
-		]
-	};
+	var map = LEVELS[0];
 
 	var plStartPosition = false;
 
@@ -24,12 +8,27 @@ game.newLoopFromConstructor('game', function () {
 	var cells = [];
 	var waters = [];
 	var enemies = [];
+	var checks = [];
+	var doors = [];
 
 	var player = game.newImageObject({
 		w : 40, h : 40,
 		file : 'img/ball.png',
 		position : point(0, 0)
 	});
+
+	var restartGame = function () {
+		player.setPositionC(plStartPosition);
+		camera.setPositionC(plStartPosition);
+	};
+
+	var nextLevel = function () {
+		if (level >= LEVELS.length)
+			level = 1;
+
+		level++;
+		map = LEVELS[level - 1];
+	};
 
 	this.entry = function () {
 
@@ -38,87 +37,135 @@ game.newLoopFromConstructor('game', function () {
 		OOP.clearArr(cells);
 		OOP.clearArr(waters);
 		OOP.clearArr(enemies);
+		OOP.clearArr(checks);
+		OOP.clearArr(doors);
 
-		OOP.forArr(map.source, function (string, Y) {
-			OOP.forArr(string, function (symbol, X) {
-				if (!symbol || symbol == ' ') return;
+		if (myLevel) {
+			OOP.forArr(myLevel, function (el) {
 
-				if (symbol == 'P') {
-					plStartPosition = point(map.width*X, map.height*Y);
-				} else if (symbol == 'W') {
-					waters.push(game.newRectObject({
-						w : map.width, h : map.height,
-						x : map.width*X, y : map.height*Y,
-						fillColor : '#084379',
-						alpha : 0.5
-					}));
-				} else if (symbol == '|') {
-					cells.push(game.newImageObject({
-						w : map.width/4, h : map.height,
-						x : map.width*X + map.width/4, y : map.height*Y,
-						file : 'img/cell.png',
-						userData : {
-							active : true
-						}
-					}));
-				} else if (symbol == '-') {
-					cells.push(game.newImageObject({
-						w : map.width/4, h : map.height,
-						x : map.width*X+ map.width/3, y : map.height*Y,
-						file : 'img/cell.png',
-						angle : 90,
-						userData : {
-							active : true
-						}
-					}));
-				} else if (symbol == '0') {
-					walls.push(game.newImageObject({
-						w : map.width, h : map.height,
-						x : map.width*X, y : map.height*Y,
-						file : 'img/block.jpg'
-					}));
-				} else if (symbol == 'E') {
-					enemies.push(game.newImageObject({
-						w : map.width/4, h : map.height / 2,
-						x : map.width*X + map.width/3, y : map.height*Y + map.height / 2,
-						file : 'img/enemy1.png'
-					}));
-				} else if (symbol == '/') {
-					walls.push(game.newImageObject({
-						w : map.width, h : map.height,
-						x : map.width*X, y : map.height*Y,
-						file : 'img/blockAngle.png',
-						userData : {
-							speedY : -1
-						}
-					}));
-				} else if (symbol == '\\') {
-					walls.push(game.newImageObject({
-						w : map.width, h : map.height,
-						x : map.width*X, y : map.height*Y,
-						file : 'img/blockAngle.png',
-						userData : {
-							speedY : 1
-						}
-					}));
-				} else if (symbol == '*') {
-					enemies.push(game.newImageObject({
-						w : map.width, h : map.height,
-						x : map.width*X, y : map.height*Y,
-						file : 'img/enemy2.png',
-						userData : {
-							mp : point(map.width*X, map.height*Y)
-						}
-					}));
+
+				if (el.gameType == 'wall')
+					walls.push(el);
+				if (el.gameType == 'cell')
+					cells.push(el);
+				if (el.gameType == 'enemy1')
+					enemies.push(el);
+				if (el.gameType == 'enemy2') {
+					var tmpP = el.getPosition();
+					el.mp = point(tmpP.x, tmpP.y);
+					enemies.push(el);
 				}
+				if (el.gameType == 'flag')
+					checks.push(el);
+				if (el.gameType == 'door')
+					doors.push(el);
 
-
-
+				if (el.gameType == 'player')
+					plStartPosition = el.getPositionC();
 
 
 
 			});
-		});
+		} else {
+			OOP.forArr(map.source, function (string, Y) {
+				OOP.forArr(string, function (symbol, X) {
+					if (!symbol || symbol == ' ') return;
+
+					if (symbol == 'P') {
+						plStartPosition = point(map.width*X, map.height*Y);
+					} else if (symbol == 'W') {
+						waters.push(game.newRectObject({
+							w : map.width, h : map.height,
+							x : map.width*X, y : map.height*Y,
+							fillColor : '#084379',
+							alpha : 0.5
+						}));
+					} else if (symbol == '|') {
+						cells.push(game.newImageObject({
+							w : map.width/4, h : map.height,
+							x : map.width*X + map.width/4, y : map.height*Y,
+							file : 'img/cell.png',
+							userData : {
+								active : true
+							}
+						}));
+					} else if (symbol == '-') {
+						cells.push(game.newImageObject({
+							w : map.width/4, h : map.height,
+							x : map.width*X+ map.width/3, y : map.height*Y,
+							file : 'img/cell.png',
+							angle : 90,
+							userData : {
+								active : true
+							}
+						}));
+					} else if (symbol == '0') {
+						walls.push(game.newImageObject({
+							w : map.width, h : map.height,
+							x : map.width*X, y : map.height*Y,
+							file : 'img/block.jpg'
+						}));
+					} else if (symbol == 'E') {
+						enemies.push(game.newImageObject({
+							w : map.width/4, h : map.height / 2,
+							x : map.width*X + map.width/3, y : map.height*Y + map.height / 2,
+							file : 'img/enemy1.png'
+						}));
+					} else if (symbol == '/') {
+						walls.push(game.newImageObject({
+							w : map.width, h : map.height,
+							x : map.width*X, y : map.height*Y,
+							file : 'img/blockAngle.png',
+							userData : {
+								speedY : -1
+							}
+						}));
+					} else if (symbol == '\\') {
+						walls.push(game.newImageObject({
+							w : map.width, h : map.height,
+							x : map.width*X, y : map.height*Y,
+							file : 'img/blockAngle.png',
+							userData : {
+								speedY : 1
+							}
+						}));
+					} else if (symbol == '*') {
+						enemies.push(game.newImageObject({
+							w : map.width, h : map.height,
+							x : map.width*X, y : map.height*Y,
+							file : 'img/enemy2.png',
+							userData : {
+								mp : point(map.width*X, map.height*Y)
+							}
+						}));
+					} else if (symbol == 'F') {
+						checks.push(game.newImageObject({
+							w : map.width, h : map.height * 2,
+							x : map.width*X, y : map.height*Y - map.height,
+							file : 'img/flag.png',
+							userData : {
+								active : true
+							}
+						}));
+					} else if (symbol == 'X') {
+						doors.push(game.newImageObject({
+							w : map.width, h : map.height * 2,
+							x : map.width*X, y : map.height*Y - map.height,
+							file : 'img/door.png',
+							userData : {
+								bonus : false
+							}
+						}));
+					}
+
+
+
+
+
+
+				});
+			});
+		}
 
 		player.gr = 0.5;
 		player.speed = point(0, 0);
@@ -192,6 +239,22 @@ game.newLoopFromConstructor('game', function () {
 			}
 		});
 
+		OOP.drawArr(doors, function (door) {
+			if (door.isStaticIntersect(player)) {
+				nextLevel();
+				game.setLoop('game');
+			}
+		});
+
+		OOP.drawArr(checks, function (check) {
+			if (check.active) {
+				if (check.isStaticIntersect(player)) {
+					check.active = false;
+					plStartPosition = check.getPositionC();
+				}
+			}
+		});
+
 		OOP.drawArr(cells, function (cell) {
 			if (cell.active) {
 				if (cell.isStaticIntersect(player)) {
@@ -209,7 +272,7 @@ game.newLoopFromConstructor('game', function () {
 			}
 
 			if (enemy.isStaticIntersect(player)) {
-				game.setLoop('game');
+				restartGame();
 			}
 		});
 
@@ -233,7 +296,7 @@ game.newLoopFromConstructor('game', function () {
 
 
 		brush.drawTextS({
-			text : 'Score: '+score,
+			text : 'Level: '+level+' Score: '+score,
 			size : 30,
 			color : '#FFFFFF',
 			strokeColor : '#002C5D',

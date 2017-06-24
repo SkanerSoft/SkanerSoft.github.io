@@ -17,6 +17,9 @@ var mouse = pjs.mouseControl.initMouseControl();
 
 var score = 0;
 var record = 0;
+var level = 1;
+
+var myLevel = false;
 
 //var touch = pjs.touchControl;
 //touch.initTouchControl();
