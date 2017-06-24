@@ -143,7 +143,7 @@ function Editor () {
 		cellView.w = cellW - nodes[type].w;
 		cellView.h = cellH - nodes[type].h;
 		cellView.setImage(nodes[type].file);
-		if (nodes[type].flipX) cellView.setFlip(nodes[type].flipX, 0);
+		cellView.setFlip(nodes[type].flipX, 0);
 		cellView.setAngle(nodes[type].angle);
 		cellView.draw();
 
