@@ -10,6 +10,8 @@ pljs.autoDraw = true;
 var bg = new CSSBackground(pjs);
 bg.setImage('img/back.jpg');
 
+var joystick = new JoyStick(pjs, 'arrows', 0, 0, 50, 50, 0, 40);
+
 var log    = pjs.system.log;     // log = console.log;
 var game   = pjs.game;           // Game Manager
 var point  = pjs.vector.point;   // Constructor for Point
@@ -46,12 +48,11 @@ game.newLoopFromConstructor('myGame', function () {
 	var animStand = image.getAnimation(202, 215, 92, 156, 1);
 	var animGo    = image.getAnimation(0, 0, 103, 150, 6);
 
-
-
 	var player = game.newAnimationObject({
 		x : 100, y : 0,
 		w : 30, h : 60,
 		animation : animStand,
+		delay : 8,
 		box : {
 			offset : point(8),
 			size : pjs.vector.size(-16)
@@ -77,6 +78,16 @@ game.newLoopFromConstructor('myGame', function () {
 
 	this.entry = function () {
 
+		if ('ontouchstart' in window) {
+
+			joystick.setImage('btnLeft', 'img/left.png');
+			joystick.setImage('btnRight', 'img/right.png');
+			joystick.setImage('btnFire', 'img/jump.png');
+
+			joystick.show();
+		}
+
+		joystick.hideBtn('btnUp, btnDown');
 
 
 		levels.forStringArray({w : 30, h : 30, source : map}, function (symbol, x, y, w, h) {
@@ -90,10 +101,10 @@ game.newLoopFromConstructor('myGame', function () {
 					file : 'img/block.png'
 				}));
 			} else if (symbol == 'C') {
-				pljs.addCell(game.newRectObject({
-					x : x, y : y,
-					w : w / 2, h : h / 2,
-					fillColor : '#FFE74F',
+				pljs.addCell(game.newImageObject({
+					x : x, y : y - 20,
+					w : w / 1.5, h : h / 1.5,
+					file : 'img/bt.png',
 					userData : {
 						jumpSpeed : math.random(2, 10)
 					}
@@ -110,7 +121,23 @@ game.newLoopFromConstructor('myGame', function () {
 
 		});
 
+		score = 0;
+
 	};
+
+	joystick.on('btnLeft:down', function () {
+		player.setFlip(1, 0);
+		player.speed.x -= 0.3;
+	});
+
+	joystick.on('btnRight:down', function () {
+		player.setFlip(0, 0);
+		player.speed.x += 0.3;
+	});
+
+	joystick.on('btnFire:press', function () {
+		player.jump(20);
+	});
 
 	this.update = function () {
 		game.clear(); // clear screen
@@ -141,8 +168,12 @@ game.newLoopFromConstructor('myGame', function () {
 
 		brush.drawTextS({
 			text : 'Собрано: ' + score,
-			size : 20,
-			color : '#FFFFFF'
+			size : 30,
+			color : '#FFFFFF',
+			strokeColor : '#545454',
+			strokeWidth : 1,
+			style : 'bold',
+			font : 'Arial'
 		});
 
 		// player.drawStaticBox('red');
