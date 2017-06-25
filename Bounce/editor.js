@@ -113,10 +113,11 @@ function Editor () {
 	var cellView = game.newImageObject({
 		file : nodes[0].file,
 		w : cellW - nodes[0].w,
-		h : cellH - nodes[0].h
+		h : cellH - nodes[0].h,
+		alpha : 0.5
 	});
 
-	var plaerPos = game.newImageObject({
+	var playerPos = game.newImageObject({
 		file : 'img/ball.png',
 		w : cellW - 10,
 		h : cellH - 10,
@@ -152,7 +153,7 @@ function Editor () {
 	var addTile = function () {
 
 		if (nodes[type].gameType == 'player') {
-			plaerPos.setPosition(curPos);
+			playerPos.setPosition(curPos);
 			return;
 		}
 
@@ -194,12 +195,28 @@ function Editor () {
 		size : 30
 	});
 
+	var MENU = game.newTextObject({
+		text : 'Меню',
+		color : 'white',
+		size : 30
+	});
+
+	this.entry = function () {
+		camera.setPositionC(playerPos.getPositionC());
+	};
+
 	this.update = function () {
 
 		if (mouse.isPeekObject('LEFT', RUN)) {
-			tiles.push(plaerPos);
+			tiles.push(playerPos);
 			myLevel = tiles;
 			game.setLoop('game');
+			return;
+		}
+
+		if (mouse.isPeekObject('LEFT', MENU)) {
+			myLevel = false;
+			game.setLoop('menu');
 			return;
 		}
 
@@ -211,13 +228,16 @@ function Editor () {
 
 		drawCell();
 		drawTiles();
-		plaerPos.draw();
+		playerPos.draw();
 
 		if (mouse.isPress('LEFT') && !onTile)
 			addTile();
 
 		RUN.setPositionS(point(0, 0));
 		RUN.draw();
+
+		MENU.setPositionS(point(game.getWH().w - MENU.getSize().w, 0));
+		MENU.draw();
 
 	};
 

@@ -137,6 +137,6 @@ game.newLoopFromClassObject('menu', new Menu(pjs, {
 	radius : 15,
 	items : {
 		game  : 'В игру',
-		about : 'Об игре',
+		editor : 'Редактор уровней',
 	}
 }));

@@ -30,6 +30,12 @@ game.newLoopFromConstructor('game', function () {
 		map = LEVELS[level - 1];
 	};
 
+	var EDITOR = game.newTextObject({
+		text : 'Редактор',
+		color : 'white',
+		size : 30
+	});
+
 	this.entry = function () {
 
 		score = 0;
@@ -304,6 +310,16 @@ game.newLoopFromConstructor('game', function () {
 			x : 10, y : 10,
 			style : 'bold'
 		});
+
+
+		EDITOR.setPositionS(point(game.getWH().w - EDITOR.getSize().w, 0));
+		EDITOR.draw();
+
+		if (mouse.isPeekObject('LEFT', EDITOR)) {
+			game.setLoop('editor');
+			return;
+		}
+
 		camera.follow(player, 50);
 
 	};
