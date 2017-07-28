@@ -31,12 +31,15 @@ game.newLoopFromConstructor('game', function () {
 	};
 
 	var EDITOR = game.newTextObject({
-		text : 'Редактор',
+		text : 'Меню',
 		color : 'white',
 		size : 30
 	});
 
 	this.entry = function () {
+
+		var snd = pjs.wAudio.newAudio(map.snd, 0.3);
+		game.setLoopSound('game', [snd]);
 
 		score = 0;
 		OOP.clearArr(walls);
@@ -316,7 +319,7 @@ game.newLoopFromConstructor('game', function () {
 		EDITOR.draw();
 
 		if (mouse.isPeekObject('LEFT', EDITOR)) {
-			game.setLoop('editor');
+			game.setLoop('menu');
 			return;
 		}
 

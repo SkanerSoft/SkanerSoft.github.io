@@ -2,7 +2,7 @@ function PointJS(D, w, h, s, NodeJS) { // GL2D/2D/3D, width, height, styleObject
 	'use strict';
 
 	this._logo = 'http://pointjs.ru/PjsMin.png';
-	var version_of_engine = '0.1.2.0';
+	var version_of_engine = '0.1.2.0'; // 15 июля
 
 	var device = window;
 	var _PointJS = this;
@@ -1566,7 +1566,8 @@ function PointJS(D, w, h, s, NodeJS) { // GL2D/2D/3D, width, height, styleObject
 		arrKeyPress = {},
 		inputPressChar = false,
 		inputPressKey = false,
-		inputMode = false;
+		inputMode = false,
+		lastKeyPress = false;
 
 	var setKeyDown = function (keyCode) {
 		arrKeyDown[keyCode] = true;
@@ -1592,6 +1593,28 @@ function PointJS(D, w, h, s, NodeJS) { // GL2D/2D/3D, width, height, styleObject
 		arrKeyPress = {};
 		inputPressChar = false;
 		inputPressKey = false;
+	};
+
+	this.keyControl.getCountKeysDown = function () {
+		var count = 0;
+		forEach(arrKeyDown, function (val, key) {
+			if (val)
+				count++;
+		});
+		return count;
+	};
+
+	this.keyControl.getAllKeysDown = function () {
+		var keys = [];
+		forEach(arrKeyDown, function (val, key) {
+			if (val)
+				keys.push(codeList[key]);
+		});
+		return keys;
+	};
+
+	this.keyControl.getLastKeyPress = function () {
+		return lastKeyPress ? codeList[lastKeyPress] : false;
 	};
 
 	this.keyControl.isDown = function (keyName) {
@@ -1655,7 +1678,10 @@ function PointJS(D, w, h, s, NodeJS) { // GL2D/2D/3D, width, height, styleObject
 				return true;
 			}
 			e.preventDefault();
-			if (arrKeyPress[e.keyCode] != 2) arrKeyPress[e.keyCode] = 1;
+			if (arrKeyPress[e.keyCode] != 2) {
+				arrKeyPress[e.keyCode] = 1;
+				lastKeyPress = e.keyCode;
+			}
 			setKeyDown(e.keyCode);
 			return false;
 		};
@@ -1684,6 +1710,7 @@ function PointJS(D, w, h, s, NodeJS) { // GL2D/2D/3D, width, height, styleObject
 			stopKeyPress();
 			inputPressChar = false;
 			inputPressKey = false;
+			lastKeyPress = false;
 		});
 
 		return this;
@@ -2873,6 +2900,7 @@ function PointJS(D, w, h, s, NodeJS) { // GL2D/2D/3D, width, height, styleObject
 			loops[key].audio = [];
 		}
 		for (i = 0; i < arrAudio.length; i+= 1) {
+			loops[key].audio.length = 0;
 			arrAudio[i].setNextPlay(arrAudio[i + 1 == arrAudio.length ? 0 : i + 1]);
 			loops[key].audio.push(arrAudio[i]);
 		}
@@ -3068,6 +3096,12 @@ function PointJS(D, w, h, s, NodeJS) { // GL2D/2D/3D, width, height, styleObject
 
 		if (obj.positionC) {
 			this.setPositionC(obj.positionC);
+		}
+
+		if (typeof obj.oncreate == 'function') {
+			this.oncreate = obj.oncreate;
+			this.oncreate();
+			delete this.oncreate;
 		}
 
 		objectList.push(this);
