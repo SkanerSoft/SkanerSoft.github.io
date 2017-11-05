@@ -30,7 +30,8 @@ game.newLoopFromConstructor('myGame', function () {
 
 	this.update = function () {
 		// Update function
-    level.draw();
+
+		var visArr = level.getObjectsInCamera();
 
     if (key.isDown('D')) speed.x = 2;
     else if (key.isDown('A')) speed.x = -2;
@@ -42,12 +43,13 @@ game.newLoopFromConstructor('myGame', function () {
     }
     if (speed.y < 4) speed.y += 0.3;
 
-    pjs.vector.moveCollision(pl, level.getObjects(), speed, function (pl, w, _x, _y) {
+    pjs.vector.moveCollision(pl, visArr, speed, function (pl, w, _x, _y) {
       if (_y) {
         countJump = 0;
       }
-    }, true);
+    }, true, 60);
 
+    OOP.drawArr(visArr);
 
     camera.follow(pl);
 
