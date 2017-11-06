@@ -53,6 +53,11 @@ game.newLoopFromConstructor('myGame', function () {
 
     camera.follow(pl);
 
+    if (countJump)
+      pl.turn(speed.x * 2.3);
+    else
+      pl.setAngle(0);
+
     if (speed.x === 0 && scaleCount < 50) {
       camera.scaleC(point(1.005, 1.005));
       scaleCount++;
