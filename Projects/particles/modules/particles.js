@@ -1,15 +1,16 @@
 // Particles Module
-Module.constructor = function (pjs) {
+PointJS.Module = function (pjs) {
 	'use strict';
 
+	const ctx = pjs.system.getContext();
 	const M = pjs.math;
 	const particles = [];
-	const limit = 200;
+	var limit = 200;
 	const updateParticles = function () {
 		let i = particles.length - 1;
 		for(; i>=0; i--) {
 			particles[i].draw();
-			if (particles[i].isExit() || particles[i].alpha <= 0 || particles.length > limit) {
+			if (particles[i].alpha <= 0 || particles[i].radius < 1) {
 				particles.splice(i, 1);
 			}
 		}
@@ -17,17 +18,24 @@ Module.constructor = function (pjs) {
 
 	class Particle {
 
-		constructor (x, y, clr, size, speed, max, isAlpha) {
+		constructor (type, x, y, clr, size, speed, step) {
 			speed *= 100;
 			this.dx = M.random(-speed, speed, true) / 100;
 			this.dy = M.random(-speed, speed, true) / 100;
 			this.startX = this.x = x + M.random(-speed, speed) / 100;
 			this.startY = this.y = y + M.random(-speed, speed) / 100;
+			this.speed = speed / 100;
 			this.color = clr;
 			this.radius = size;
-			this.max = max || 100;
-			this.isAlpha = isAlpha;
+			this.step = step;
 			this.alpha = 1;
+
+			this.type = {
+				'circle' : 0,
+				'gravity' : 1,
+				'fire' : 2
+			}[type];
+
 		}
 
 		isExit () {
@@ -39,32 +47,51 @@ Module.constructor = function (pjs) {
 		}
 
 		draw () {
+
+			if (this.type === 1) { // gravity
+				this.dy += this.speed / 10;
+			} else if (this.type === 2) { // fire
+				if (this.radius > 1) this.radius -= this.speed / 10;
+				if (this.dy > 0) this.dy = 0;
+				this.dy -= this.speed / 10;
+				if (this.dx <= 0) this.dx += this.speed / 20;
+				if (this.dx >= 0) this.dx -= this.speed / 20;
+			}
+
 			this.x += this.dx * pjs.game.getDT(10);
 			this.y += this.dy * pjs.game.getDT(10);
 
-			if (this.isAlpha) {
-				this.alpha -= 1 / this.max;
-			}
-
+			this.alpha -= this.step;
+			if (this.alpha < 0) return;
+			var old = ctx.globalAlpha;
+			ctx.globalAlpha = this.alpha;
 			pjs.brush.drawCircle({
 				x : this.x - this.radius, y : this.y - this.radius,
 				radius : this.radius,
-				fillColor : pjs.colors.hex2rgba(this.color, this.alpha)
+				fillColor : this.color
 			});
+			ctx.globalAlpha = old;
 		}
 
 	}
 
-	pjs.OOP.addParticle = function (pos, size, color, speed, den, max, isAlpha) {
-		// if (particles.length > limit) return;
-		if (den) {
-			let i = den;
+	pjs.particles = {};
+
+	pjs.particles.setLimit = function (lim) {
+		limit = lim;
+	};
+
+	pjs.particles.add = function (obj) {
+		if (obj.density) {
+			let i = obj.density;
 			for (; i>=0; i--) {
-				particles.push(new Particle(pos.x || 0, pos.y || 0, color, size, speed || 10, max || 10, isAlpha || 0));
+				particles.push(new Particle(obj.type, obj.position.x || 0, obj.position.y || 0, obj.fillColor, obj.size, obj.speed || 10, obj.step || 0.01));
 			}
 		} else
-			particles.push(new Particle(pos.x || 0, pos.y || 0, color, size, speed || 10, max || 10, isAlpha || 0));
+			particles.push(new Particle(obj.type, obj.position.x || 0, obj.position.y || 0, obj.fillColor, obj.size, obj.speed || 10, obj.step || 0.01));
 	};
+
+
 
 	pjs.system.addEvent('postLoop', 'updateParticles', function () {
 		updateParticles();

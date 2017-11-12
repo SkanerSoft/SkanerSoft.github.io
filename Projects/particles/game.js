@@ -11,49 +11,38 @@ const camera = pjs.camera;         // Camera Manager
 const brush  = pjs.brush;          // Brush, used for simple drawing
 const OOP    = pjs.OOP;            // Objects manager
 const math   = pjs.math;           // More Math-methods
-
-pjs.modules.importSync('modules/particles.js');
-
-const key   = pjs.keyControl.initKeyControl();
+const mouse  = pjs.mouseControl.initControl();
 
 let width  = game.getWH().w; // width of scene viewport
 let height = game.getWH().h; // height of scene viewport
 
+pjs.system.setSettings({
+	isAutoClear : false
+});
+
+pjs.modules.import('modules/particles.js', function () {
+	pjs.particles.setLimit(100);
+});
+
 game.newLoopFromConstructor('myGame', function () {
-  let level, player, speed = point(), jumpCount;
-
 	this.update = function () {
-    if (!level || !player) return;
-    let map = level.getObjectsInCamera();
-    OOP.drawArr(map);
+		if (!pjs.resources.isLoaded()) return;
 
-		OOP.addParticle(player.getPositionC(), 20, '#b8b8b8', 0.5, 2, 30, true);
+		game.fill(pjs.colors.hex2rgba('#1f1f1f', 0.8));
 
-    if (key.isDown('A')) speed.x = -3;
-    else if (key.isDown('D')) speed.x = 3;
-    else speed.x = 0;
-    
-    if (key.isPress('W') && !jumpCount) {
-      jumpCount++;
-      speed.y = -6;
-    }
-    if (speed.y < 5) speed.y += 0.2;
-    
-    pjs.vector.moveCollision(player, map, speed, function (pl, w, isX, isY) {
-      if (isY) jumpCount = 0;
-    }, true);
+		if (mouse.isMove() || 1) {
+			pjs.particles.add({
+				type: 'fire',
+				position: mouse.getPosition(),
+				size: math.random(1, 10, true),
+				fillColor: '#ffe08d',
+				speed: 0.8,
+				step: 0.03,
+				density : 5
+			});
+		}
 
-    camera.follow(player);
 	};
-
-	this.entry = function () { // optional
-    OOP.readJSON('level.pjs', function (data) {
-      level = pjs.levels.newLevelFromJSON(data);
-      player = level.getObjectByName('player');
-      level.del(player);
-    }, true);
-	};
-
 });
 
 game.startLoop('myGame');
