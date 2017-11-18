@@ -1,0 +1,21 @@
+{
+
+	"name" : "Flappy Bird PointJS",
+
+	"screen" : {
+		"full" : false,
+		"width" : 640,
+		"height" : 480
+	},
+
+	"description" : "Пример создания игры Flappy Bird на PointJS",
+
+	"author" : "Нагель Петр (Skaner)",
+
+	"email" : "skaner0@yandex.ru",
+
+	"version" : "0.0.1",
+
+	"site" : "https://vk.com/skaner.soft"
+
+}
