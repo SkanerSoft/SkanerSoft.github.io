@@ -17,12 +17,13 @@
 <script type="text/javascript" src="point.js"></script>
 <script type="text/javascript">
 
+var width = 640, 
+    height = 480;
+	
 
-var pjs = new PointJS('2D', 640, 480);
+var pjs = new PointJS('2D', width, height);
 // pjs.system.initFullPage();
 
-var width = pjs.game.getWH().w, 
-    height = pjs.game.getWH().h;
 	
 	
 var log = pjs.system.log;
