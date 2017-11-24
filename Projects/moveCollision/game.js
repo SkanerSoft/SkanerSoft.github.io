@@ -37,7 +37,7 @@ game.newLoopFromConstructor('myGame', function () {
     else if (key.isDown('A')) speed.x = -2;
     else speed.x = 0;
 
-    if (key.isPress('W') && !countJump) {
+   if (key.isPress('W') && !speed.y && !countJump) {
       countJump++;
       speed.y = -6;
     }
@@ -49,6 +49,7 @@ game.newLoopFromConstructor('myGame', function () {
         countJump = 0;
       }
     }, true, 60);
+
 
     OOP.drawArr(visArr);
 
