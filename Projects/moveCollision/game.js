@@ -45,6 +45,7 @@ game.newLoopFromConstructor('myGame', function () {
 
     pjs.vector.moveCollision(pl, visArr, speed, function (pl, w, _x, _y) {
       if (_y) {
+        if (pl.y < w.y)
         countJump = 0;
       }
     }, true, 60);
