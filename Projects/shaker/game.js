@@ -102,7 +102,13 @@ game.newLoopFromConstructor('myGame', function () {
     enemy = level.getObjectByName('enemy');
     enemy.dataSet('hp', 100);
     enemy.ondraw = function () {
-      if (this.dataGet('hp') < 0) pjs.system.restart();
+
+      if (this.dataGet('hp') <= 0) {
+        game.stop();
+        location.reload();
+        return;
+      }
+
       brush.drawText({
         x : enemy.getPositionC().x,
         y : enemy.y-30,
@@ -111,6 +117,7 @@ game.newLoopFromConstructor('myGame', function () {
         size : 30,
         color : '#102771'
       });
+
     }
   };
 
