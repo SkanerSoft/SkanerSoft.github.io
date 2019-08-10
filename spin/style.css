@@ -1,0 +1,40 @@
+/* SUPER STYLE MY Game */
+
+* {
+    padding: 0;
+    margin: 0;
+    box-sizing: border-box;
+}
+
+body {
+    text-align: center;
+    padding: 20px;
+    background: #0d0c15;
+}
+
+#game {
+    padding: 10px;
+    background: #2b2b2b;
+    color: white;
+    display: inline-block;
+    border-radius: 20px;
+}
+
+#game #title {
+    padding-bottom: 10px;
+    font-family: Troika;
+    font-size: 50px;
+    color: #5889a8;
+    text-shadow: 0 0 5px #0061b0;
+}
+
+#cnv {
+    border-radius: 15px;
+    background: #1a272f;
+    box-shadow: 0 0 5px #00A7FF;
+}
+
+
+
+
+
