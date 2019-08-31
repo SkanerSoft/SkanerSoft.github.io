@@ -1,0 +1,29 @@
+[gd_scene load_steps=4 format=2]
+
+[ext_resource path="res://player.tscn" type="PackedScene" id=1]
+[ext_resource path="res://world.tscn" type="PackedScene" id=2]
+
+[sub_resource type="GDScript" id=1]
+script/source = "extends Camera
+
+onready var player = $'../player'
+
+func _physics_process(delta):
+	var p = player.transform.origin + Vector3(0, 5, 5).rotated(Vector3.UP, player.rotation.y)
+	var t = player.transform.origin + Vector3(0,3,0)
+	look_at_from_position(p, t, Vector3.UP)"
+
+[node name="game" type="Node"]
+
+[node name="player" parent="." instance=ExtResource( 1 )]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.5354, 0 )
+
+[node name="world" parent="." instance=ExtResource( 2 )]
+
+[node name="camera" type="Camera" parent="."]
+transform = Transform( 1, 0, 0, 0, 0.809394, 0.587266, 0, -0.587266, 0.809394, 0, 10.0372, 5.46159 )
+script = SubResource( 1 )
+
+[node name="DirectionalLight" type="DirectionalLight" parent="."]
+transform = Transform( -0.99977, -9.31108e-010, 0.0214688, 0.00995516, 0.885991, 0.463596, -0.0190212, 0.463703, -0.885786, 0, 36.908, 0 )
+shadow_enabled = true
