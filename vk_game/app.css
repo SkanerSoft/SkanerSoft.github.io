@@ -1,0 +1,23 @@
+@font-face {
+	font-family: "Troika";
+	src: url(troika.otf);
+}
+
+.user_data {
+	background: #2c753f;
+	padding: 5px 15px;
+	display: inline-flex;
+	align-items: center;
+	position: fixed;
+	left: 5px;
+	bottom: 5px;
+	font-weight: bold;
+	color: white;
+	border-radius: 5px;
+	font-family: Troika;
+}
+
+.user_data img {
+	border-radius: 50%;
+	margin-right: 10px;
+}
