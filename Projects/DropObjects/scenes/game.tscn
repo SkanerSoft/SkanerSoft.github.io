@@ -1,0 +1,65 @@
+[gd_scene load_steps=4 format=2]
+
+[ext_resource path="res://scripts/game.gd" type="Script" id=1]
+[ext_resource path="res://style/default.tres" type="Theme" id=2]
+
+[sub_resource type="GDScript" id=1]
+script/source = "extends ColorRect
+
+var cast = null
+
+
+func _process(delta):
+	if cast != G.player.cast:
+		cast = G.player.cast
+
+
+		if cast is Interactive:
+			$cell_label.text = cast.label
+		else:
+			$cell_label.text = ''
+
+"
+
+[node name="game" type="Node"]
+script = ExtResource( 1 )
+
+[node name="world" type="Spatial" parent="."]
+
+[node name="ui" type="Control" parent="."]
+anchor_right = 1.0
+anchor_bottom = 1.0
+theme = ExtResource( 2 )
+__meta__ = {
+"_edit_use_anchors_": false
+}
+
+[node name="cell" type="ColorRect" parent="ui"]
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+margin_left = -7.5
+margin_top = -7.5
+margin_right = 7.5
+margin_bottom = 7.5
+color = Color( 1, 1, 1, 0.509804 )
+script = SubResource( 1 )
+__meta__ = {
+"_edit_use_anchors_": false
+}
+
+[node name="cell_label" type="Label" parent="ui/cell"]
+anchor_left = 0.5
+anchor_top = 1.0
+anchor_right = 0.5
+anchor_bottom = 1.0
+margin_left = -541.5
+margin_top = 28.0
+margin_right = 541.5
+margin_bottom = 96.0
+align = 1
+valign = 1
+__meta__ = {
+"_edit_use_anchors_": false
+}
